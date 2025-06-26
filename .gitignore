@@ -1,3 +1,5 @@
 *.exe
 include/raylib.h
 lib
+obj
+*.nes
