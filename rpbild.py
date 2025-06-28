@@ -20,6 +20,7 @@ static_raylib_name  = "libraylib.a"
 raylib_header_name  = "raylib.h"
 example_dir         = os.path.join(raylib_dir, 'examples', 'core')
 example_name        = 'core_basic_window.c'
+skip                = 'test'
 
 # =================================================================================================
 #                          Helper functions 
@@ -188,7 +189,7 @@ def init_project():
 
 def compile():
     config_env()
-    global root_dir, compiler_name, compiler_flags, linker_flags
+    global root_dir, compiler_name, compiler_flags, linker_flags, skip
     root_dir_list = os.listdir()
 
     if 'obj' not in root_dir_list:
@@ -200,6 +201,8 @@ def compile():
     src_list, obj_list = [], []
    
     for src in src_dir_list:
+        if skip in src:
+            continue
         obj = src.split('.')[0] + '.o'
         obj_list.append(os.path.join('obj', obj))
         # add files for recompilation if either its .o doesn't exist or is older than the file itself
@@ -222,11 +225,10 @@ def compile():
                 print("GCC compilation failed!")
         
     if len(src_list) < 1:
-        print('Nothing to recompile, try compiling after modification')
         exit(1)
 
     # link and generate the executable file
-    obj_list.extend(['-o', 'main'])
+    obj_list.extend(['-o', f'main'])
     cmd = generate_execution_cmd(compiler_name, compiler_flags, obj_list, linker_flags)
 
     try:
@@ -252,14 +254,19 @@ def clean():
 # =================================================================================================
 
 def main():
+    global skip
     args = argv[1:]
     
     if len(args) <= 0 or args[0] == 'compile':
+        skip = 'test'
         compile()
     elif len(args) > 0 and args[0] == 'init':
         init_project()
     elif len(args) > 0 and args[0] == 'clean':
         clean()
+    elif len(args) > 0 and args[0] == 'test':
+        skip = 'main'
+        compile()
 
 if __name__ == "__main__":
     main()
