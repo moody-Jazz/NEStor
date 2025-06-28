@@ -1,0 +1,110 @@
+import json
+from sys import argv
+import os
+import subprocess
+
+def test(instruction, itr = 15):
+
+    testfile = open(os.path.join('testsDir', instruction))
+    registers_keys = ['pc', 's', 'a', 'x', 'y', 'p']
+    test_count = 1
+
+    while itr:
+        outfile = open('testval.txt', 'w')
+        test_instance = testfile.readline()
+        if test_instance.startswith('[') or test_instance.startswith(']'):
+            continue
+        if test_instance == '':
+            break
+        test_instance = test_instance.strip().rstrip(',')
+        test_dic = json.loads(test_instance)
+        
+        # write all the register and memory values for test.cpp to read and set cpu values
+        init_reg_values = [test_dic['initial'][key] for key in registers_keys]
+        expected_mem = []
+        expected_reg = [test_dic['final'][key] for key in registers_keys]
+
+        for val in init_reg_values:
+            outfile.write(f'{val} ')
+        outfile.write('\n')
+        for val in test_dic['initial']['ram']:
+            outfile.write(f'{val[0]} {val[1]}\n')
+        outfile.write('\n')
+        for val in test_dic['final']['ram']:
+            expected_mem.append([val[0], val[1]])
+            outfile.write(f'{val[0]} {val[1]}\n')
+
+        outfile.close()
+        try:
+            subprocess.run(['python', 'rpbild.py', 'test'])
+            subprocess.run(['main'], check=True) 
+        except subprocess.CalledProcessError as e:
+            print('error running the test script')
+            exit(1)
+
+        # read the updated file to extract the final register and memory values
+        infile = open('testval.txt', 'r')
+        final_reg = infile.readline().strip().rstrip('\n').split(' ')
+        final_mem = []
+        while True:
+            temp_string = infile.readline()
+            temp_string = temp_string.strip().rstrip('\n')
+            if temp_string == '':
+                break
+            final_mem.extend([temp_string.split(' ')])
+        
+        # convert the read values into integer for comparision
+        final_reg = list(map(int, final_reg))
+        final_mem = [[int(a), int(b)] for a, b in final_mem]
+        infile.close()
+
+        # compare the initial and final values to determine if Test was sucessful or not
+        for i in range(len(final_reg)):
+            if final_reg[i] != expected_reg[i]:
+                print(f"🔴 test case no {test_count} failed for instruction {instruction}")
+                print("🔴 Register values don't match")
+                print('register order')
+                print(registers_keys)
+                print('Initial:', init_reg_values)
+                print('Expected:', expected_reg, '\nActual:', final_reg)
+                print(f'Expected:', expected_mem, '\nActual:', final_mem)
+                exit(1)
+        
+        for i in range(len(final_mem)):
+            if final_mem[i][1] != expected_mem[i][1]:
+                print(f"🔴 test case no {test_count} failed for instruction {instruction}")
+                print("🔴 Memory values don't match")
+                print(f'for address {expected_mem[i][0]} Expected: {expected_mem[i][1]}')
+                print(f'for address {final_mem[i][0]} Actual: {final_mem[i][1]}')
+                print(f'Expected:', expected_mem, '\nActual:', final_mem)
+                print('Expected:', expected_reg, '\nActual:', final_reg)
+                exit(1)
+
+        print('🟢  Test passed for test count', test_count)
+        test_count += 1
+        itr -= 1
+
+
+def main():
+    args = argv[1:]
+    
+    itr = int(input('How many test cases you want to test against: '))
+
+    # For testing against specific instruction
+    if len(args) > 0 and args[0] == 'test':
+        file = input('Name of test file: ')
+        print(f"🟢 starting testing for {file}")
+        test(file, itr)
+        print(f"🟢 All test passed for {file}")
+        
+    json_file = os.listdir('testsDir')
+
+    # For testing against all the instructions for which jsons are available
+    for file in json_file:
+        print(f"🟢 starting testing for {file}")
+        test(file, itr)
+        print(f"🟢 All test passed for {file}")
+
+
+if __name__ == '__main__':
+    main()
