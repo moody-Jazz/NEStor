@@ -1,163 +1,164 @@
 #include "cpu.hpp"
 
 cpu::cpu(): argList(256){
-    stkPtr_ = STACK_PAGE_ENDING;
+    stkPtr_ = ZERO_PAGE_ENDING;
     prgrmCtr_ = 0x0;
+    statusReg_ |= one;
 
-    argList[0x00] = {implied, 0};
-    argList[0x01] = {indirect, indexregX_};
-    argList[0x05] = {zeroPage, 0};
-    argList[0x06] = {zeroPage, 0};
-    argList[0x08] = {implied, 0};
-    argList[0x09] = {immediate, 0};
-    argList[0x0A] = {acc, 0};
-    argList[0x0D] = {absolute, 0};
-    argList[0x0E] = {absolute, 0};
-    argList[0x10] = {relative, 0};
-    argList[0x11] = {indirect, indexregY_};
-    argList[0x15] = {zeroPage, indexregX_};
-    argList[0x16] = {zeroPage, indexregX_};
-    argList[0x18] = {implied, 0};
-    argList[0x19] = {absolute, indexregY_};
-    argList[0x1D] = {absolute, indexregX_};
-    argList[0x1E] = {absolute, indexregX_};
-    argList[0x20] = {absolute, 0};
-    argList[0x21] = {indirect, indexregX_};
-    argList[0x24] = {zeroPage, 0};
-    argList[0x25] = {zeroPage, 0};
-    argList[0x26] = {zeroPage, 0};
-    argList[0x28] = {implied, 0};
-    argList[0x29] = {immediate, 0};
-    argList[0x2A] = {acc, 0};
-    argList[0x2C] = {absolute, 0};
-    argList[0x2D] = {absolute, 0};
-    argList[0x2E] = {absolute, 0};
-    argList[0x30] = {relative, 0};
-    argList[0x31] = {indirect, indexregY_};
-    argList[0x35] = {zeroPage, indexregX_};
-    argList[0x36] = {zeroPage, indexregX_};
-    argList[0x38] = {implied, 0};
-    argList[0x39] = {absolute, indexregY_};
-    argList[0x3D] = {absolute, indexregX_};
-    argList[0x3E] = {absolute, indexregX_};
-    argList[0x40] = {implied, 0};
-    argList[0x41] = {indirect, indexregX_};
-    argList[0x45] = {zeroPage, 0};
-    argList[0x46] = {zeroPage, 0};
-    argList[0x48] = {implied, 0};
-    argList[0x49] = {immediate, 0};
-    argList[0x4A] = {acc, 0};
-    argList[0x4C] = {absolute, 0};
-    argList[0x4D] = {absolute, 0};
-    argList[0x4E] = {absolute, 0};
-    argList[0x50] = {relative, 0};
-    argList[0x51] = {indirect, indexregY_};
-    argList[0x55] = {zeroPage, indexregX_};
-    argList[0x56] = {zeroPage, indexregX_};
-    argList[0x58] = {implied, 0};
-    argList[0x59] = {absolute, indexregY_};
-    argList[0x5D] = {absolute, indexregX_};
-    argList[0x5E] = {absolute, indexregX_};
-    argList[0x60] = {implied, 0};
-    argList[0x61] = {indirect, indexregX_};
-    argList[0x65] = {zeroPage, 0};
-    argList[0x66] = {zeroPage, 0};
-    argList[0x68] = {implied, 0};
-    argList[0x69] = {immediate, 0};
-    argList[0x6A] = {acc, 0};
-    argList[0x6C] = {indirect, 0};
-    argList[0x6D] = {absolute, 0};
-    argList[0x6E] = {absolute, 0};
-    argList[0x70] = {relative, 0};
-    argList[0x71] = {indirect, indexregY_};
-    argList[0x75] = {zeroPage, indexregX_};
-    argList[0x76] = {zeroPage, indexregX_};
-    argList[0x78] = {implied, 0};
-    argList[0x79] = {absolute, indexregY_};
-    argList[0x7D] = {absolute, indexregX_};
-    argList[0x7E] = {absolute, indexregX_};
-    argList[0x81] = {indirect, indexregX_};
-    argList[0x84] = {zeroPage, 0};
-    argList[0x85] = {zeroPage, 0};
-    argList[0x86] = {zeroPage, 0};
-    argList[0x88] = {implied, 0};
-    argList[0x8A] = {implied, 0};
-    argList[0x8C] = {absolute, 0};
-    argList[0x8D] = {absolute, 0};
-    argList[0x8E] = {absolute, 0};
-    argList[0x90] = {relative, 0};
-    argList[0x91] = {indirect, indexregY_};
-    argList[0x94] = {zeroPage, indexregX_};
-    argList[0x95] = {zeroPage, indexregX_};
-    argList[0x96] = {zeroPage, indexregY_};
-    argList[0x98] = {implied, 0};
-    argList[0x99] = {absolute, indexregY_};
-    argList[0x9A] = {implied, 0};
-    argList[0x9D] = {absolute, indexregX_};
-    argList[0xA0] = {immediate, 0};
-    argList[0xA1] = {indirect, indexregX_};
-    argList[0xA2] = {immediate, 0};
-    argList[0xA4] = {zeroPage, 0};
-    argList[0xA5] = {zeroPage, 0};
-    argList[0xA6] = {zeroPage, 0};
-    argList[0xA8] = {implied, 0};
-    argList[0xA9] = {immediate, 0};
-    argList[0xAA] = {implied, 0};
-    argList[0xAC] = {absolute, 0};
-    argList[0xAD] = {absolute, 0};
-    argList[0xAE] = {absolute, 0};
-    argList[0xB0] = {relative, 0};
-    argList[0xB1] = {indirect, indexregY_};
-    argList[0xB4] = {zeroPage, indexregX_};
-    argList[0xB5] = {zeroPage, indexregX_};
-    argList[0xB6] = {zeroPage, indexregY_};
-    argList[0xB8] = {implied, 0};
-    argList[0xB9] = {absolute, indexregY_};
-    argList[0xBA] = {implied, 0};
-    argList[0xBC] = {absolute, indexregX_};
-    argList[0xBD] = {absolute, indexregX_};
-    argList[0xBE] = {absolute, indexregY_};
-    argList[0xC0] = {immediate, 0};
-    argList[0xC1] = {indirect, indexregX_};
-    argList[0xC4] = {zeroPage, 0};
-    argList[0xC5] = {zeroPage, 0};
-    argList[0xC6] = {zeroPage, 0};
-    argList[0xC8] = {implied, 0};
-    argList[0xC9] = {immediate, 0};
-    argList[0xCA] = {implied, 0};
-    argList[0xCC] = {absolute, 0};
-    argList[0xCD] = {absolute, 0};
-    argList[0xCE] = {absolute, 0};
-    argList[0xD0] = {relative, 0};
-    argList[0xD1] = {indirect, indexregY_};
-    argList[0xD5] = {zeroPage, indexregX_};
-    argList[0xD6] = {zeroPage, indexregX_};
-    argList[0xD8] = {implied, 0};
-    argList[0xD9] = {absolute, indexregY_};
-    argList[0xDD] = {absolute, indexregX_};
-    argList[0xDE] = {absolute, indexregX_};
-    argList[0xE0] = {immediate, 0};
-    argList[0xE1] = {indirect, indexregX_};
-    argList[0xE4] = {zeroPage, 0};
-    argList[0xE5] = {zeroPage, 0};
-    argList[0xE6] = {zeroPage, 0};
-    argList[0xE8] = {implied, 0};
-    argList[0xE9] = {immediate, 0};
-    argList[0xEA] = {implied, 0};
-    argList[0xEC] = {absolute, 0};
-    argList[0xED] = {absolute, 0};
-    argList[0xEE] = {absolute, 0};
-    argList[0xF0] = {relative, 0};
-    argList[0xF1] = {indirect, indexregY_};
-    argList[0xF5] = {zeroPage, indexregX_};
-    argList[0xF6] = {zeroPage, indexregX_};
-    argList[0xF8] = {implied, 0};
-    argList[0xF9] = {absolute, indexregY_};
-    argList[0xFD] = {absolute, indexregX_};
-    argList[0xFE] = {absolute, indexregX_};
+    argList[0x00] = {implied, NA};
+    argList[0x01] = {indirect, X};
+    argList[0x05] = {zeroPage, NA};
+    argList[0x06] = {zeroPage, NA};
+    argList[0x08] = {implied, NA};
+    argList[0x09] = {immediate, NA};
+    argList[0x0A] = {acc, NA};
+    argList[0x0D] = {absolute, NA};
+    argList[0x0E] = {absolute, NA};
+    argList[0x10] = {relative, NA};
+    argList[0x11] = {indirect, Y};
+    argList[0x15] = {zeroPage, X};
+    argList[0x16] = {zeroPage, X};
+    argList[0x18] = {implied, NA};
+    argList[0x19] = {absolute, Y};
+    argList[0x1D] = {absolute, X};
+    argList[0x1E] = {absolute, X};
+    argList[0x20] = {absolute, NA};
+    argList[0x21] = {indirect, X};
+    argList[0x24] = {zeroPage, NA};
+    argList[0x25] = {zeroPage, NA};
+    argList[0x26] = {zeroPage, NA};
+    argList[0x28] = {implied, NA};
+    argList[0x29] = {immediate, NA};
+    argList[0x2A] = {acc, NA};
+    argList[0x2C] = {absolute, NA};
+    argList[0x2D] = {absolute, NA};
+    argList[0x2E] = {absolute, NA};
+    argList[0x30] = {relative, NA};
+    argList[0x31] = {indirect, Y};
+    argList[0x35] = {zeroPage, X};
+    argList[0x36] = {zeroPage, X};
+    argList[0x38] = {implied, NA};
+    argList[0x39] = {absolute, Y};
+    argList[0x3D] = {absolute, X};
+    argList[0x3E] = {absolute, X};
+    argList[0x40] = {implied, NA};
+    argList[0x41] = {indirect, X};
+    argList[0x45] = {zeroPage, NA};
+    argList[0x46] = {zeroPage, NA};
+    argList[0x48] = {implied, NA};
+    argList[0x49] = {immediate, NA};
+    argList[0x4A] = {acc, NA};
+    argList[0x4C] = {absolute, NA};
+    argList[0x4D] = {absolute, NA};
+    argList[0x4E] = {absolute, NA};
+    argList[0x50] = {relative, NA};
+    argList[0x51] = {indirect, Y};
+    argList[0x55] = {zeroPage, X};
+    argList[0x56] = {zeroPage, X};
+    argList[0x58] = {implied, NA};
+    argList[0x59] = {absolute, Y};
+    argList[0x5D] = {absolute, X};
+    argList[0x5E] = {absolute, X};
+    argList[0x60] = {implied, NA};
+    argList[0x61] = {indirect, X};
+    argList[0x65] = {zeroPage, NA};
+    argList[0x66] = {zeroPage, NA};
+    argList[0x68] = {implied, NA};
+    argList[0x69] = {immediate, NA};
+    argList[0x6A] = {acc, NA};
+    argList[0x6C] = {indirect, NA};
+    argList[0x6D] = {absolute, NA};
+    argList[0x6E] = {absolute, NA};
+    argList[0x70] = {relative, NA};
+    argList[0x71] = {indirect, Y};
+    argList[0x75] = {zeroPage, X};
+    argList[0x76] = {zeroPage, X};
+    argList[0x78] = {implied, NA};
+    argList[0x79] = {absolute, Y};
+    argList[0x7D] = {absolute, X};
+    argList[0x7E] = {absolute, X};
+    argList[0x81] = {indirect, X};
+    argList[0x84] = {zeroPage, NA};
+    argList[0x85] = {zeroPage, NA};
+    argList[0x86] = {zeroPage, NA};
+    argList[0x88] = {implied, NA};
+    argList[0x8A] = {implied, NA};
+    argList[0x8C] = {absolute, NA};
+    argList[0x8D] = {absolute, NA};
+    argList[0x8E] = {absolute, NA};
+    argList[0x90] = {relative, NA};
+    argList[0x91] = {indirect, Y};
+    argList[0x94] = {zeroPage, X};
+    argList[0x95] = {zeroPage, X};
+    argList[0x96] = {zeroPage, Y};
+    argList[0x98] = {implied, NA};
+    argList[0x99] = {absolute, Y};
+    argList[0x9A] = {implied, NA};
+    argList[0x9D] = {absolute, X};
+    argList[0xA0] = {immediate, NA};
+    argList[0xA1] = {indirect, X};
+    argList[0xA2] = {immediate, NA};
+    argList[0xA4] = {zeroPage, NA};
+    argList[0xA5] = {zeroPage, NA};
+    argList[0xA6] = {zeroPage, NA};
+    argList[0xA8] = {implied, NA};
+    argList[0xA9] = {immediate, NA};
+    argList[0xAA] = {implied, NA};
+    argList[0xAC] = {absolute, NA};
+    argList[0xAD] = {absolute, NA};
+    argList[0xAE] = {absolute, NA};
+    argList[0xB0] = {relative, NA};
+    argList[0xB1] = {indirect, Y};
+    argList[0xB4] = {zeroPage, X};
+    argList[0xB5] = {zeroPage, X};
+    argList[0xB6] = {zeroPage, Y};
+    argList[0xB8] = {implied, NA};
+    argList[0xB9] = {absolute, Y};
+    argList[0xBA] = {implied, NA};
+    argList[0xBC] = {absolute, X};
+    argList[0xBD] = {absolute, X};
+    argList[0xBE] = {absolute, Y};
+    argList[0xC0] = {immediate, NA};
+    argList[0xC1] = {indirect, X};
+    argList[0xC4] = {zeroPage, NA};
+    argList[0xC5] = {zeroPage, NA};
+    argList[0xC6] = {zeroPage, NA};
+    argList[0xC8] = {implied, NA};
+    argList[0xC9] = {immediate, NA};
+    argList[0xCA] = {implied, NA};
+    argList[0xCC] = {absolute, NA};
+    argList[0xCD] = {absolute, NA};
+    argList[0xCE] = {absolute, NA};
+    argList[0xD0] = {relative, NA};
+    argList[0xD1] = {indirect, Y};
+    argList[0xD5] = {zeroPage, X};
+    argList[0xD6] = {zeroPage, X};
+    argList[0xD8] = {implied, NA};
+    argList[0xD9] = {absolute, Y};
+    argList[0xDD] = {absolute, X};
+    argList[0xDE] = {absolute, X};
+    argList[0xE0] = {immediate, NA};
+    argList[0xE1] = {indirect, X};
+    argList[0xE4] = {zeroPage, NA};
+    argList[0xE5] = {zeroPage, NA};
+    argList[0xE6] = {zeroPage, NA};
+    argList[0xE8] = {implied, NA};
+    argList[0xE9] = {immediate, NA};
+    argList[0xEA] = {implied, NA};
+    argList[0xEC] = {absolute, NA};
+    argList[0xED] = {absolute, NA};
+    argList[0xEE] = {absolute, NA};
+    argList[0xF0] = {relative, NA};
+    argList[0xF1] = {indirect, Y};
+    argList[0xF5] = {zeroPage, X};
+    argList[0xF6] = {zeroPage, X};
+    argList[0xF8] = {implied, NA};
+    argList[0xF9] = {absolute, Y};
+    argList[0xFD] = {absolute, X};
+    argList[0xFE] = {absolute, X};
 }
 
-void cpu::cycle(){
+void cpu::executeInstruction(){
     opcode_ = memory[prgrmCtr_++];
     
     args = argList[opcode_];
@@ -167,7 +168,7 @@ void cpu::cycle(){
 void cpu::printInfo(){
     std::cout<<"prgrm counter: "<<prgrmCtr_<<"\n";
     std::cout<<"index x and y reg: "<<indexregX_<<" "<<indexregY_<<"\n";
-    std::cout<<"stack pointer: "<<stkPtr_<<"\n\n";
+    std::cout<<"stack pointer: "<<STACK_PAGE_STARTING + stkPtr_<<"\n\n";
 }
 
 bool cpu::getFlag(uint8_t flag){
@@ -179,39 +180,95 @@ void cpu::clearFlag(uint8_t flag){
 void cpu::setFlag(uint8_t flag){
     statusReg_ |= flag;
 }
+void cpu::setPc(uint16_t pc){
+    prgrmCtr_ = pc;
+}
+void cpu::setStkPtr(uint16_t stk){
+    stkPtr_ = stk;
+}
+void cpu::setAcc(uint8_t acc){
+    acc_ = acc;
+}
+void cpu::setX(uint8_t x){
+    indexregX_ = x;
+}
+void cpu::setY(uint8_t y){
+    indexregY_ = y;
+}
+void cpu::setStatus(uint8_t status){
+    statusReg_ = status;
+}
+uint16_t cpu::getPc(){
+    return prgrmCtr_;
+}
+uint16_t cpu::getStkPtr(){
+    return stkPtr_;
+}
+uint8_t cpu::getAcc(){
+    return acc_;
+}
+uint8_t cpu::getX(){
+    return indexregX_;
+}
+uint8_t cpu::getY(){
+    return indexregY_;
+}
+uint8_t cpu::getStatus(){
+    return statusReg_;
+}
+
+void cpu::updateZNflag(uint8_t reg, uint8_t val){
+    if(reg == val) setFlag(zero);
+    else clearFlag(zero);
+    if(reg & negative) setFlag(negative);
+    else clearFlag(negative);
+}
 
 uint16_t cpu::getAddress(uint8_t mode, uint8_t offset){
     uint16_t address{};
+    uint8_t low{}, high{};
+
+    if(mode == indirect){
+        uint8_t baseAddr = memory[prgrmCtr_++];
+
+        if(offset == X){
+            low = memory[(baseAddr + indexregX_) % 256];
+            high = memory[(baseAddr + indexregX_ + 1) % 256];
+            address = (high << 8) | low;
+        }
+        else{
+            low = memory[baseAddr];
+            high = memory[(baseAddr + 1) % 256];
+            address = ((high << 8) | low) + indexregY_;
+        }
+    }
+
+    if(offset == X)
+        offset = indexregX_;
+        
+    else if(offset == Y)
+        offset = indexregY_;
 
     if(mode == immediate)
         address = prgrmCtr_++;
 
     else if(mode == zeroPage)
         address = (memory[prgrmCtr_++] + offset) % 256;
-    
+
     else if(mode == absolute){
-        uint8_t low = memory[prgrmCtr_++];
-        uint8_t high = memory[prgrmCtr_++];
+        low = memory[prgrmCtr_++];
+        high = memory[prgrmCtr_++];
         address = (high << 8) | low;
         address += offset;
     }
-    else if(mode == indirect){
-        uint8_t zpageAddr = memory[prgrmCtr_++];
-        uint8_t low = memory[(zpageAddr + offset) % 256];
-        uint8_t high = memory[(zpageAddr + offset + 1) % 256];
-        address = (high << 8) | low;
-    }
+
     return address;
 }
 
 // Access instructions: LDA	STA	LDX	STX	LDY	STY		
 void cpu::LDA(uint8_t mode, uint8_t offset){
     acc_ = memory[getAddress(mode, offset)];
-
-    if(acc_ == 0) setFlag(zero);
-    else clearFlag(zero);
-    if(acc_ & negative) setFlag(negative);
-    else clearFlag(zero);
+    updateZNflag(acc_, 0);
 }
 
 void cpu::STA(uint8_t mode, uint8_t offset){
@@ -220,11 +277,7 @@ void cpu::STA(uint8_t mode, uint8_t offset){
 
 void cpu::LDX(uint8_t mode, uint8_t offset){
     indexregX_ = memory[getAddress(mode, offset)];
-
-    if(indexregX_ == 0) setFlag(zero);
-    else clearFlag(zero);
-    if(indexregX_ & negative) setFlag(negative);
-    else clearFlag(zero);
+    updateZNflag(indexregX_, 0);
 }
 
 void cpu::STX(uint8_t mode, uint8_t offset){
@@ -233,11 +286,7 @@ void cpu::STX(uint8_t mode, uint8_t offset){
  
 void cpu::LDY(uint8_t mode, uint8_t offset){
     indexregY_ = memory[getAddress(mode, offset)];
-
-    if(indexregY_ == 0) setFlag(zero);
-    else clearFlag(zero);
-    if(indexregY_ & negative) setFlag(negative);
-    else clearFlag(zero);
+    updateZNflag(indexregY_, 0);
 }
 
 void cpu::STY(uint8_t mode, uint8_t offset){
@@ -247,35 +296,19 @@ void cpu::STY(uint8_t mode, uint8_t offset){
 // Transfer instructions: TAX TXA TAY TYA		
 void cpu::TAX(uint8_t, uint8_t){
     indexregX_ = acc_;
-
-    if(indexregX_ == 0) setFlag(zero);
-    else clearFlag(zero);
-    if(indexregX_ & negative) setFlag(negative);
-    else clearFlag(zero);
+    updateZNflag(indexregX_, 0);
 } 
 void cpu::TXA(uint8_t, uint8_t){
     acc_ = indexregX_;
-
-    if(acc_ == 0) setFlag(zero);
-    else clearFlag(zero);
-    if(acc_ & negative) setFlag(negative);
-    else clearFlag(zero);
+    updateZNflag(acc_, 0);
 } 
 void cpu::TAY(uint8_t, uint8_t){
     indexregY_ = acc_;
-
-    if(indexregY_ == 0) setFlag(zero);
-    else clearFlag(zero);
-    if(indexregY_ & negative) setFlag(negative);
-    else clearFlag(zero);
+    updateZNflag(indexregY_, 0);
 } 
 void cpu::TYA(uint8_t, uint8_t){
     acc_ = indexregY_;
-
-    if(acc_ == 0) setFlag(zero);
-    else clearFlag(zero);
-    if(acc_ & negative) setFlag(negative);
-    else clearFlag(zero);
+    updateZNflag(acc_, 0);
 } 
 
 // Arithmetic instructions: ADC	SBC	INC	DEC	INX	DEX	INY	DEY
@@ -287,81 +320,52 @@ void cpu::ADC(uint8_t mode, uint8_t offset){
 
     if(sum > 0xFF) setFlag(carry);
     else clearFlag(carry);
-    if(((accval & negative) && (memval & negative) && ~(sum & negative)) ||
-    (~(accval & negative) && ~(memval & negative) && (sum & negative)))
-        setFlag(overflow);
+    if((sum ^ accval) & (sum ^ memval) & negative) setFlag(overflow);
     else clearFlag(overflow);
-    if(acc_ == 0) setFlag(zero);
-    else clearFlag(zero);
-    if(acc_ & negative) setFlag(negative);
-    else clearFlag(zero);
+    updateZNflag(acc_, 0);
 }
 
 void cpu::SBC(uint8_t mode, uint8_t offset){
     uint8_t memval = memory[getAddress(mode, offset)];
     uint8_t accval = acc_;
-    uint16_t sum = acc_ + ~memval + getFlag(carry);
+    uint16_t sum = acc_ - memval - !getFlag(carry);
+
     acc_ = sum;
-    
+
     if(sum > 0xFF) clearFlag(carry);
     else setFlag(carry);
-    if(((accval & negative) && (memval & negative) && ~(sum & negative)) ||
-    (~(accval & negative) && ~(memval & negative) && (sum & negative)))
-        setFlag(overflow);
+    if((sum ^ accval) & (sum ^ ~memval) & negative) setFlag(overflow);
     else clearFlag(overflow);
-    if(acc_ == 0) setFlag(zero);
-    else clearFlag(zero);
-    if(acc_ & negative) setFlag(negative);
-    else clearFlag(zero);
+    updateZNflag(acc_, 0);
 }  
 
 void cpu::INC(uint8_t mode, uint8_t offset){
     uint16_t address = getAddress(mode, offset);
     memory[address]++;
-
-    if(memory[address] == 0) setFlag(zero);
-    else clearFlag(zero);
-    if(memory[address] & negative) setFlag(negative);
-    else clearFlag(zero);
+    updateZNflag(memory[address], 0);
 }
 
 void cpu::DEC(uint8_t mode, uint8_t offset){
     uint16_t address = getAddress(mode, offset);
     memory[address]--;
-
-    if(memory[address] == 0) setFlag(zero);
-    else clearFlag(zero);
-    if(memory[address] & negative) setFlag(negative);
-    else clearFlag(zero);
+    updateZNflag(memory[address], 0);
 }
 
 void cpu::INX(uint8_t, uint8_t){
     indexregX_++;
-    if(indexregX_ == 0) setFlag(zero);
-    else clearFlag(zero);
-    if(indexregX_ & negative) setFlag(negative);
-    else clearFlag(zero);
+    updateZNflag(indexregX_, 0);
 } 
 void cpu::DEX(uint8_t, uint8_t){
     indexregX_--;
-    if(indexregX_ == 0) setFlag(zero);
-    else clearFlag(zero);
-    if(indexregX_ & negative) setFlag(negative);
-    else clearFlag(zero);
+    updateZNflag(indexregX_, 0);
 } 
 void cpu::INY(uint8_t, uint8_t){
     indexregY_++;
-    if(indexregY_ == 0) setFlag(zero);
-    else clearFlag(zero);
-    if(indexregY_ & negative) setFlag(negative);
-    else clearFlag(zero);
+    updateZNflag(indexregY_, 0);
 } 
 void cpu::DEY(uint8_t, uint8_t){
     indexregY_--;
-    if(indexregY_ == 0) setFlag(zero);
-    else clearFlag(zero);
-    if(indexregY_ & negative) setFlag(negative);
-    else clearFlag(zero);
+    updateZNflag(indexregY_, 0);
 } 
 
 // Shift instructions : ASL	LSR	ROL	ROR
@@ -370,10 +374,7 @@ void cpu::ASL_acc(uint8_t, uint8_t){
     else clearFlag(carry);
 
     acc_ <<= 1;
-    if(acc_ == 0) setFlag(zero);
-    else clearFlag(zero);
-    if(acc_ & negative) setFlag(negative);
-    else clearFlag(negative);
+    updateZNflag(acc_, 0);
 }
 
 void cpu::ASL(uint8_t mode, uint8_t offset){
@@ -382,11 +383,7 @@ void cpu::ASL(uint8_t mode, uint8_t offset){
     else clearFlag(carry);
 
     memory[address] <<= 1;
-
-    if(memory[address] == 0) setFlag(zero);
-    else clearFlag(zero);
-    if(memory[address] & negative) setFlag(negative);
-    else clearFlag(negative);
+    updateZNflag(memory[address], 0);
 }
 
 void cpu::LSR_acc(uint8_t, uint8_t){
@@ -394,19 +391,16 @@ void cpu::LSR_acc(uint8_t, uint8_t){
     else clearFlag(carry);
 
     acc_ >>= 1;
-    if(acc_ == 0) setFlag(zero);
-    else clearFlag(zero);
+    updateZNflag(acc_, 0);
     clearFlag(negative);
 }
 void cpu::LSR(uint8_t mode, uint8_t offset){
     uint16_t address = getAddress(mode, offset);
-    if(memory[address] & negative) setFlag(carry);
+    if(memory[address] & carry) setFlag(carry);
     else clearFlag(carry);
 
     memory[address] >>= 1;
-
-    if(memory[address] == 0) setFlag(zero);
-    else clearFlag(zero);
+    updateZNflag(memory[address], 0);
     clearFlag(negative);
 }
 
@@ -417,10 +411,7 @@ void cpu::ROL_acc(uint8_t, uint8_t){
 
     acc_ <<= 1;
     acc_ |= prevCarry;
-    if(acc_ == 0) setFlag(zero);
-    else clearFlag(zero);
-    if(acc_ & negative) setFlag(negative);
-    else clearFlag(negative);
+    updateZNflag(acc_, 0);
 }
 
 void cpu::ROL(uint8_t mode, uint8_t offset){
@@ -431,72 +422,49 @@ void cpu::ROL(uint8_t mode, uint8_t offset){
 
     memory[address] <<= 1;
     memory[address] |= prevCarry;
-    if(memory[address] == 0) setFlag(zero);
-    else clearFlag(zero);
-    if(memory[address] & negative) setFlag(negative);
-    else clearFlag(negative);
+    updateZNflag(memory[address], 0);
 }
 
 void cpu::ROR_acc(uint8_t, uint8_t){
     bool prevCarry = getFlag(carry);
-    if(acc_ & negative) setFlag(carry);
+    if(acc_ & carry) setFlag(carry);
     else clearFlag(carry);
 
     acc_ >>= 1;
     acc_ |= (prevCarry << 7);
-
-    if(acc_ == 0) setFlag(zero);
-    else clearFlag(zero);
-    if(acc_ & negative) setFlag(negative);
-    else clearFlag(negative);   
+    updateZNflag(acc_, 0);   
 }
 void cpu::ROR(uint8_t mode, uint8_t offset){
     uint16_t address = getAddress(mode, offset);
     bool prevCarry = getFlag(carry);
-    if(memory[address] & negative) setFlag(carry);
+    if(memory[address] & carry) setFlag(carry);
     else clearFlag(carry);
 
     memory[address] >>= 1;
     memory[address] |= (prevCarry << 7);
-
-    if(memory[address] == 0) setFlag(zero);
-    else clearFlag(zero);
-    if(memory[address] & negative) setFlag(negative);
-    else clearFlag(negative);   
+    updateZNflag(memory[address], 0);
 }
 
 // Bitwise instructions: AND ORA EOR BIT				
 void cpu::AND(uint8_t mode, uint8_t offset){
     acc_ &= memory[getAddress(mode, offset)];
-
-    if(acc_ == 0) setFlag(zero);
-    else clearFlag(zero);
-    if(acc_ & negative) setFlag(negative);
-    else clearFlag(negative);   
+    updateZNflag(acc_, 0);   
 }
 
 void cpu::ORA(uint8_t mode, uint8_t offset){
     acc_ |= memory[getAddress(mode, offset)];
-
-    if(acc_ == 0) setFlag(zero);
-    else clearFlag(zero);
-    if(acc_ & negative) setFlag(negative);
-    else clearFlag(negative);   
+    updateZNflag(acc_, 0);   
 }
 
 void cpu::EOR(uint8_t mode, uint8_t offset){
     acc_ ^= memory[getAddress(mode, offset)];
-
-    if(acc_ == 0) setFlag(zero);
-    else clearFlag(zero);
-    if(acc_ & negative) setFlag(negative);
-    else clearFlag(negative);   
+    updateZNflag(acc_, 0);   
 }
 
 void cpu::BIT(uint8_t mode, uint8_t offset){
     uint16_t address = getAddress(mode, offset);
-
-    if(acc_ & memory[address]) setFlag(zero);
+  
+    if((acc_ & memory[address]) == 0) setFlag(zero);
     else clearFlag(zero);
     if(memory[address] & overflow) setFlag(overflow);
     else clearFlag(overflow);
@@ -542,59 +510,59 @@ void cpu::CPY(uint8_t mode, uint8_t offset){
 
 // Branch instructions: BCC	BCS	BEQ	BNE	BPL	BMI	BVC	BVS
 void cpu::BPL(uint8_t, uint8_t) {
-    if (!(statusReg_ & negative)) {
-        uint8_t offset = memory[prgrmCtr_++];
-        prgrmCtr_ += offset;
-    }
+    uint8_t offset = memory[prgrmCtr_++];
+
+    if (!(statusReg_ & negative)) 
+        prgrmCtr_ += static_cast<int8_t>(offset);
 }
 
 void cpu::BMI(uint8_t, uint8_t) {
-    if (statusReg_ & negative) {
-        uint8_t offset = memory[prgrmCtr_++];
-        prgrmCtr_ += offset;
-    }
+    uint8_t offset = memory[prgrmCtr_++];
+
+    if (statusReg_ & negative)
+        prgrmCtr_ += static_cast<int8_t>(offset);    
 }
 
 void cpu::BVC(uint8_t, uint8_t) {
-    if (!(statusReg_ & overflow)) {
-        uint8_t offset = memory[prgrmCtr_++];
-        prgrmCtr_ += offset;
-    }
+    uint8_t offset = memory[prgrmCtr_++];
+
+    if (!(statusReg_ & overflow)) 
+        prgrmCtr_ += static_cast<int8_t>(offset);
 }
 
 void cpu::BVS(uint8_t, uint8_t) {
-    if (statusReg_ & overflow) {
-        uint8_t offset = memory[prgrmCtr_++];
-        prgrmCtr_ += offset;
-    }
+    uint8_t offset = memory[prgrmCtr_++];
+
+    if (statusReg_ & overflow)
+        prgrmCtr_ += static_cast<int8_t>(offset);
 }
 
 void cpu::BCC(uint8_t, uint8_t) {
-    if (!(statusReg_ & carry)) {
-        uint8_t offset = memory[prgrmCtr_++];
-        prgrmCtr_ += offset;
-    }
+    uint8_t offset = memory[prgrmCtr_++];
+
+    if (!(statusReg_ & carry)) 
+        prgrmCtr_ += static_cast<int8_t>(offset);
 }
 
 void cpu::BCS(uint8_t, uint8_t) {
-    if (statusReg_ & carry) {
-        uint8_t offset = memory[prgrmCtr_++];
-        prgrmCtr_ += offset;
-    }
+    uint8_t offset = memory[prgrmCtr_++];
+
+    if (statusReg_ & carry) 
+        prgrmCtr_ += static_cast<int8_t>(offset);
 }
 
 void cpu::BNE(uint8_t, uint8_t) {
-    if (!(statusReg_ & zero)) {
-        uint8_t offset = memory[prgrmCtr_++];
-        prgrmCtr_ += offset;
-    }
+    uint8_t offset = memory[prgrmCtr_++];
+
+    if (!(statusReg_ & zero)) 
+        prgrmCtr_ += static_cast<int8_t>(offset);
 }
 
 void cpu::BEQ(uint8_t, uint8_t) {
-    if (statusReg_ & zero) {
-        uint8_t offset = memory[prgrmCtr_++];
-        prgrmCtr_ += offset;
-    }
+    uint8_t offset = memory[prgrmCtr_++];
+
+    if (statusReg_ & zero) 
+        prgrmCtr_ += static_cast<int8_t>(offset);
 }
 
 
@@ -619,74 +587,74 @@ void cpu::JSR(uint8_t, uint8_t){
     uint8_t high = (return_address >> 8) & 0xFF;
     uint8_t low = return_address & 0xFF;
 
-    memory[stkPtr_--] = high;
-    memory[stkPtr_--] = low;
+    memory[STACK_PAGE_STARTING + stkPtr_--] = high;
+    memory[STACK_PAGE_STARTING + stkPtr_--] = low;
 
     prgrmCtr_ = address;
 } 
 
 void cpu::RTS(uint8_t, uint8_t){
-    prgrmCtr_ = memory[stkPtr_++];
+    uint8_t low = memory[STACK_PAGE_STARTING + ++stkPtr_];
+    uint8_t high = memory[STACK_PAGE_STARTING + ++stkPtr_];
+
+    prgrmCtr_ = (high << 8) | low;
     prgrmCtr_++;
 } 
 
 void cpu::BRK(uint8_t, uint8_t){
     ++prgrmCtr_;
+    
     uint8_t high = (prgrmCtr_ >> 8) & 0xFF;
     uint8_t low = prgrmCtr_ & 0xFF;
-    setFlag(bFlag);
-    memory[stkPtr_--] = high;
-    memory[stkPtr_--] = low;
-    memory[stkPtr_--] = statusReg_;
-
+    
+    memory[STACK_PAGE_STARTING + stkPtr_--] = high;
+    memory[STACK_PAGE_STARTING + stkPtr_--] = low;
+    memory[STACK_PAGE_STARTING + stkPtr_--] = statusReg_ | bFlag;
+    
+    setFlag(intrptDisable);
     low = memory[0xFFFE];
     high = memory[0xFFFF];
     prgrmCtr_ = (high << 8) | low;
-
-    setFlag(intrptDisable);
 } 
 
 void cpu::RTI(uint8_t, uint8_t){
-    statusReg_ = memory[stkPtr_++];
-    uint8_t low = memory[stkPtr_++];
-    uint8_t high = memory[stkPtr_++];
+    statusReg_ = memory[STACK_PAGE_STARTING + ++stkPtr_] | one;
+    clearFlag(bFlag);
+    
+    uint8_t low = memory[STACK_PAGE_STARTING + ++stkPtr_];
+    uint8_t high = memory[STACK_PAGE_STARTING + ++stkPtr_];
     
     prgrmCtr_ = (high << 8) | low;
 } 
 
 // cpu::Stack instruction: PHA PLA PHP PLP TXS TSX			
 void cpu::PHA(uint8_t, uint8_t){
-    memory[stkPtr_--] = acc_;
+    memory[STACK_PAGE_STARTING + stkPtr_--] = acc_;
 } 
 
 void cpu::PLA(uint8_t, uint8_t){
-    acc_ = memory[++stkPtr_];
+    acc_ = memory[STACK_PAGE_STARTING + ++stkPtr_];
 
-    if(acc_ == 0) setFlag(zero);
-    else clearFlag(zero);
-    if(acc_ & negative) setFlag(negative);
-    else clearFlag(negative);
+    updateZNflag(acc_, 0);
 } 
 
 void cpu::PHP(uint8_t, uint8_t){
-    memory[stkPtr_--] = (statusReg_ | 0b00110000);
+    memory[STACK_PAGE_STARTING + stkPtr_--] = (statusReg_ | 0b00110000);
 } 
 
 void cpu::PLP(uint8_t, uint8_t){
-    statusReg_ = (memory[++stkPtr_] & 0b11001111);
+    statusReg_ &= 0b00110000; 
+    statusReg_ |= memory[STACK_PAGE_STARTING + ++stkPtr_] & 0b11001111;
 } 
 
 void cpu::TXS(uint8_t, uint8_t){
-    memory[stkPtr_--] = indexregX_;
+    stkPtr_ = indexregX_;
 } 
 
 void cpu::TSX(uint8_t, uint8_t){
-    indexregX_ = memory[++stkPtr_];
+    indexregX_ = stkPtr_;
     
-    if(indexregX_ == 0) setFlag(zero);
-    else clearFlag(zero);
-    if(indexregX_ & negative) setFlag(negative);
-    else clearFlag(negative);
+    updateZNflag(indexregX_, 0);
 } 
 
 // Flags instructions:  CLC	SEC	CLI	SEI	CLD	SED	CLV	
@@ -713,6 +681,4 @@ void cpu::CLV(uint8_t, uint8_t){
 }
 
 // Other instructions: NOP	
-void cpu::NOP(uint8_t, uint8_t){
-
-}
+void cpu::NOP(uint8_t, uint8_t){}

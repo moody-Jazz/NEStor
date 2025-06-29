@@ -11,7 +11,7 @@ public:
     cpu();
    
     std::pair<uint8_t, uint8_t> args;
-    void cycle();
+    void executeInstruction();
     void printInfo();
     
     enum STATUS_FLAGS{
@@ -25,10 +25,37 @@ public:
         negative        = 0b10000000,
     };
 
+    enum ADDRESSING_MODES{
+        acc,
+        implied,
+        immediate,
+        zeroPage,
+        absolute,
+        indirect, 
+        relative, 
+    };
+
+    enum REGISTERS{
+        NA, A, X, Y, PC, SR
+    };
+
     bool getFlag(uint8_t flag);
     void clearFlag(uint8_t flag);
     void setFlag(uint8_t flag);
     uint16_t getAddress(uint8_t mode, uint8_t offset);
+    void setPc(uint16_t pc);
+    void setStkPtr(uint16_t stk);
+    void setAcc(uint8_t acc);
+    void setX(uint8_t x);
+    void setY(uint8_t y);
+    void setStatus(uint8_t status);
+    uint16_t getPc();
+    uint16_t getStkPtr();
+    uint8_t getAcc();
+    uint8_t getX();
+    uint8_t getY();
+    uint8_t getStatus();
+    void updateZNflag(uint8_t reg, uint8_t val);
     
     void LDA(uint8_t mode, uint8_t offset);	
     void STA(uint8_t mode, uint8_t offset);	
@@ -92,19 +119,19 @@ public:
     void CLV(uint8_t, uint8_t);
     void NOP(uint8_t, uint8_t);
     
-    std::vector<std::pair<uint8_t, uint8_t>> argList;
+    std::vector<std::pair<ADDRESSING_MODES, REGISTERS>>argList;
 
     void (cpu::*opcodeMap[256]) (uint8_t, uint8_t) = {
-        BRK, ORA, NOP, NOP, NOP, ORA, ASL, NOP, PHP, ORA, ASL, NOP, NOP, 
+        BRK, ORA, NOP, NOP, NOP, ORA, ASL, NOP, PHP, ORA, ASL_acc, NOP, NOP, 
         ORA, ASL, NOP, BPL, ORA, NOP, NOP, NOP, ORA, ASL, NOP, CLC, ORA, 
         NOP, NOP, NOP, ORA, ASL, NOP, JSR, AND, NOP, NOP, BIT, AND, ROL,
-        NOP, PLP, AND, ROL, NOP, BIT, AND, ROL, NOP, BMI, AND, NOP, NOP,
+        NOP, PLP, AND, ROL_acc, NOP, BIT, AND, ROL, NOP, BMI, AND, NOP, NOP,
         NOP, AND, ROL, NOP, SEC, AND, NOP, NOP, NOP, AND, ROL, NOP, RTI,
-        EOR, NOP, NOP, NOP, EOR, LSR, NOP, PHA, EOR, LSR, NOP, JMP_abs, EOR,
-        LSR, NOP, BVC, EOR, NOP, NOP, NOP, EOR, LSR, NOP, CLI, EOR, NOP,
+        EOR, NOP, NOP, NOP, EOR, LSR, NOP, PHA, EOR, LSR_acc, NOP, JMP_abs,
+        EOR, LSR, NOP, BVC, EOR, NOP, NOP, NOP, EOR, LSR, NOP, CLI, EOR, NOP,
         NOP, NOP, EOR, LSR, NOP, RTS, ADC, NOP, NOP, NOP, ADC, ROR, NOP,
-        PLA, ADC, ROR, NOP, JMP_indr, ADC, ROR, NOP, BVS, ADC, NOP, NOP, NOP,
-        ADC, ROR, NOP, SEI, ADC, NOP, NOP, NOP, ADC, ROR, NOP, NOP, STA,
+        PLA, ADC, ROR_acc, NOP, JMP_indr, ADC, ROR, NOP, BVS, ADC, NOP, NOP,
+        NOP, ADC, ROR, NOP, SEI, ADC, NOP, NOP, NOP, ADC, ROR, NOP, NOP, STA,
         NOP, NOP, STY, STA, STX, NOP, DEY, NOP, TXA, NOP, STY, STA, STX,
         NOP, BCC, STA, NOP, NOP, STY, STA, STX, NOP, TYA, STA, TXS, NOP,
         NOP, STA, NOP, NOP, LDY, LDA, LDX, NOP, LDY, LDA, LDX, NOP, TAY,
@@ -122,9 +149,9 @@ public:
     uint8_t indexregX_, indexregY_;
     
     uint16_t prgrmCtr_;
-    uint16_t  stkPtr_;
+    uint8_t  stkPtr_;
     
-    uint8_t statusReg_;
+    uint8_t statusReg_{};
     
     uint8_t opcode_;
 };

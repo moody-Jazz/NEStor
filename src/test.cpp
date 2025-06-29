@@ -56,7 +56,7 @@ public:
             }
         }
 
-        testcpu.cycle();
+        testcpu.executeInstruction();
 
         std::ofstream ofile(filename);
         if (!ofile)

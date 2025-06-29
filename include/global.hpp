@@ -6,13 +6,3 @@
 extern uint8_t memory[65535];
 extern std::vector<std::pair<int, int>> argList[256];
 void loadRom(const std::string filename);
-
-enum ADDRESSING_MODES{
-        acc,
-        implied,
-        immediate,
-        zeroPage,
-        absolute,
-        indirect, 
-        relative, 
-    };
