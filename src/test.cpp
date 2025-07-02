@@ -1,12 +1,17 @@
-#include "cpu.hpp"
+#include "bus.hpp"
+#include "fstream"
 #include <sstream>
+#include <iostream>
 #include <string>
+
+#define testcpu bus.cpu6502
 
 class CpuTest{
 public:
     void runTest(){
         std::string filename = "testval.txt";
-        cpu testcpu;
+        Bus bus;
+
         std::ifstream ifile(filename);
         std::vector<size_t> address;
         bool readingFinalBlock = false;
@@ -52,7 +57,7 @@ public:
                     address.push_back(addr); // final check memory address
             
                 else
-                    memory[addr] = val; // initial memory load
+                    bus.write(addr, val); // initial memory load
             }
         }
 
@@ -71,7 +76,7 @@ public:
 
         // Write updated addresses
         for (uint16_t addr : address)
-            ofile << addr << " " << +memory[addr] << "\n";
+            ofile << addr << " " << +bus.read(addr) << "\n";
         
         ifile.close();
         ofile.close();
