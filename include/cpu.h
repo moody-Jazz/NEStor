@@ -2,7 +2,7 @@
 
 #include <cstdint>
 #include <vector>
-#include "global.hpp"
+#include "global.h"
 
 constexpr uint8_t ZERO_PAGE_STARTING = 0X00;
 constexpr uint8_t ZERO_PAGE_ENDING = 0XFF;
@@ -18,29 +18,7 @@ class Cpu {
   void reset();
   void printInfo();
 
-  enum STATUS_FLAGS {
-    carry = 0b00000001,
-    zero = 0b00000010,
-    intrptDisable = 0b00000100,
-    decimal = 0b00001000,
-    bFlag = 0b00010000,
-    unused = 0b00100000,
-    overflow = 0b01000000,
-    negative = 0b10000000,
-  };
-
-  enum ADDRESSING_MODES {
-    acc,
-    implied,
-    immediate,
-    zeroPage,
-    absolute,
-    indirect,
-    relative,
-  };
-
-  enum REGISTERS { NA, A, X, Y, PC, SR };
-
+  // getters and setters
   bool getFlag(uint8_t flag);
   void clearFlag(uint8_t flag);
   void setFlag(uint8_t flag);
@@ -58,6 +36,7 @@ class Cpu {
   uint8_t getIndexRegisterX();
   uint8_t getIndexRegisterY();
   uint8_t getStatusRegister();
+  
   void updateZNflag(uint8_t reg, uint8_t val);
 
   uint8_t cpuRead(uint16_t addr);
@@ -125,7 +104,7 @@ class Cpu {
   void CLV(uint8_t, uint8_t);
   void NOP(uint8_t, uint8_t);
 
-  std::vector<std::pair<ADDRESSING_MODES, REGISTERS>> argList;
+  std::vector<std::pair<ADDRESSING_MODES, REGISTERS>> opcodeArgList;
 
   void (Cpu::*opcodeMap[256])(uint8_t, uint8_t) = {
       BRK, ORA, NOP, NOP, NOP, ORA, ASL, NOP,     PHP,     ORA,      ASL_acc,

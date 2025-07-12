@@ -1,4 +1,4 @@
-#include "cpu.hpp"
+#include "cpu.h"
 #include "raylib.h"
 
 int main(void) {

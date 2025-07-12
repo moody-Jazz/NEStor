@@ -2,7 +2,7 @@
 #include <sstream>
 #include <iostream>
 #include <string>
-#include "cpu.hpp"
+#include "cpu.h"
 
 void runTest(Cpu& testcpu) {
   std::string filename = "testval.txt";
@@ -36,7 +36,7 @@ void runTest(Cpu& testcpu) {
   while (std::getline(ifile, line)) {
     if (line.empty()) {
       readingFinalBlock = true;
-      continue;  // move to next line
+      continue; 
     }
 
     std::istringstream iss(line);
