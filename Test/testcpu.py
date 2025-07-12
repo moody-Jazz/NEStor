@@ -5,10 +5,11 @@ import subprocess
 
 def test(instruction, itr = 15):
 
-    testfile = open(os.path.join('testsDir', instruction))
+    testfile = open(os.path.join('cpu_test_suit', instruction))
     registers_keys = ['pc', 's', 'a', 'x', 'y', 'p']
     test_count = 1
 
+    os.chdir("..")
     while itr:
         outfile = open('testval.txt', 'w')
         test_instance = testfile.readline()
@@ -38,6 +39,7 @@ def test(instruction, itr = 15):
         try:
             subprocess.run(['python', 'rpbild.py', 'test'])
             subprocess.run(['main'], check=True) 
+
         except subprocess.CalledProcessError as e:
             print('error running the test script')
             exit(1)
@@ -83,12 +85,18 @@ def test(instruction, itr = 15):
         print('🟢  Test passed for test count', test_count)
         test_count += 1
         itr -= 1
-
+    os.chdir("Test/")
 
 def main():
     args = argv[1:]
     
     itr = int(input('How many test cases you want to test against: '))
+    
+    if 'cpu_test_suit' in os.listdir(os.getcwd()):
+        json_file = os.listdir('cpu_test_suit')
+    else:
+        print("Use the install_cputests script to install all the test first")
+        exit(1)
 
     # For testing against specific instruction
     if len(args) > 0 and args[0] == 'test':
@@ -97,7 +105,6 @@ def main():
         test(file, itr)
         print(f"🟢 All test passed for {file}")
         
-    json_file = os.listdir('testsDir')
 
     # For testing against all the instructions for which jsons are available
     for file in json_file:

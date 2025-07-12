@@ -27,14 +27,14 @@ def main():
     file_path = ''
     url = ''
 
-    if not os.path.exists('testsDir'):
+    if not os.path.exists('cpu_test_suit'):
         print('creating test directory......')
-        os.makedirs('testsDir')
+        os.makedirs('cpu_test_suit')
 
     print('downloading all the tests.......')
     for file in filename_list:
         url = git_url + file
-        file_path = os.path.join('testsDir', file)
+        file_path = os.path.join('cpu_test_suit', file)
         print(f'downloading {file} from url \n {url}')
         urllib.request.urlretrieve(url, file_path)
 

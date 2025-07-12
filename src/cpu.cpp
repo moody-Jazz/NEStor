@@ -1,9 +1,8 @@
 #include "cpu.hpp"
-#include "bus.hpp"
-#include "iostream"
+#include <iostream>
 
 Cpu::Cpu() : argList(256) {
-  stkPtr_ = ZERO_PAGE_ENDING;
+  stkPtr_ = 0xFD;
   prgrmCtr_ = 0x0;
   statusReg_ |= one;
 
@@ -160,17 +159,17 @@ Cpu::Cpu() : argList(256) {
   argList[0xFE] = {absolute, X};
 }
 
-void Cpu::connectBus(Bus* bus) { this->bus = bus; }
-
 void Cpu::executeInstruction() {
   opcode_ = cpuRead(prgrmCtr_++);
   args = argList[opcode_];
   (this->*opcodeMap[opcode_])(args.first, args.second);
 }
 
-uint8_t Cpu::cpuRead(uint16_t addr) { return bus->read(addr); }
+void Cpu::reset(){}
 
-void Cpu::cpuWrite(uint16_t addr, uint8_t value) { bus->write(addr, value); }
+uint8_t Cpu::cpuRead(uint16_t addr) { return memory[addr]; }
+
+void Cpu::cpuWrite(uint16_t addr, uint8_t value) { memory[addr] = value; }
 
 void Cpu::printInfo() {
   std::cout << "prgrm counter: " << prgrmCtr_ << "\n";

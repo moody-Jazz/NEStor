@@ -1,20 +1,21 @@
 #pragma once
-#include "cstdint"
-#include "vector"
+
+#include <cstdint>
+#include <vector>
+#include "global.hpp"
 
 constexpr uint8_t ZERO_PAGE_STARTING = 0X00;
 constexpr uint8_t ZERO_PAGE_ENDING = 0XFF;
 constexpr uint16_t STACK_PAGE_STARTING = 0X0100;
 constexpr uint16_t STACK_PAGE_ENDING = 0X01FF;
 
-class Bus;
 class Cpu {
  public:
   Cpu();
-  Bus* bus;
 
   std::pair<uint8_t, uint8_t> args;
   void executeInstruction();
+  void reset();
   void printInfo();
 
   enum STATUS_FLAGS {
@@ -40,7 +41,6 @@ class Cpu {
 
   enum REGISTERS { NA, A, X, Y, PC, SR };
 
-  void connectBus(Bus* bus);
   bool getFlag(uint8_t flag);
   void clearFlag(uint8_t flag);
   void setFlag(uint8_t flag);

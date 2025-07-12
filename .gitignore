@@ -1,5 +1,10 @@
 *.exe
+.vscode
 include/raylib.h
 lib
 obj
 *.nes
+helper.txt
+extract.py
+testval.txt
+cpu_test_suit

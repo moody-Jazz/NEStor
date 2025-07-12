@@ -1,9 +1,9 @@
-
+#include "cpu.hpp"
 #include "raylib.h"
 
 int main(void)
 {
-  
+    Cpu nescpu;
     const int screenWidth = 800;
     const int screenHeight = 450;
 
@@ -14,8 +14,8 @@ int main(void)
     while (!WindowShouldClose()) 
     {
         BeginDrawing();
-
         ClearBackground(RAYWHITE);
+        nescpu.executeInstruction();
 
         EndDrawing();
     }
