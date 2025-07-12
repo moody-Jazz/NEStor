@@ -2,9 +2,9 @@
 #include <iostream>
 
 Cpu::Cpu() : argList(256) {
-  stkPtr_ = 0xFD;
-  prgrmCtr_ = 0x0;
-  statusReg_ |= one;
+  stackPointer_ = 0xFD;
+  programCounter_ = 0x0;
+  statusRegister_ |= unused;
 
   argList[0x00] = {implied, NA};
   argList[0x01] = {indirect, X};
@@ -160,26 +160,35 @@ Cpu::Cpu() : argList(256) {
 }
 
 void Cpu::executeInstruction() {
-  opcode_ = cpuRead(prgrmCtr_++);
+  opcode_ = cpuRead(programCounter_++);
   args = argList[opcode_];
   (this->*opcodeMap[opcode_])(args.first, args.second);
 }
 
-void Cpu::reset(){}
+void Cpu::reset() {
+  accumulator_ = 0;
+  indexRegisterX_ = 0;
+  indexRegisterY_ = 0;
+  stackPointer_ = 0xFD;
+  statusRegister_ = unused;  // Set unused bit (bit 5)
+  programCounter_ = 0;
+}
 
 uint8_t Cpu::cpuRead(uint16_t addr) { return memory[addr]; }
 
 void Cpu::cpuWrite(uint16_t addr, uint8_t value) { memory[addr] = value; }
 
 void Cpu::printInfo() {
-  std::cout << "prgrm counter: " << prgrmCtr_ << "\n";
-  std::cout << "index x and y reg: " << indexregX_ << " " << indexregY_ << "\n";
-  std::cout << "stack pointer: " << STACK_PAGE_STARTING + stkPtr_ << "\n\n";
+  std::cout << "prgrm counter: " << programCounter_ << "\n";
+  std::cout << "index x and y reg: " << indexRegisterX_ << " " << indexRegisterY_
+            << "\n";
+  std::cout << "stack pointer: " << STACK_PAGE_STARTING + stackPointer_
+            << "\n\n";
 }
 
-bool Cpu::getFlag(uint8_t flag) { return (statusReg_ & flag); }
-void Cpu::clearFlag(uint8_t flag) { statusReg_ &= ~flag; }
-void Cpu::setFlag(uint8_t flag) { statusReg_ |= flag; }
+bool Cpu::getFlag(uint8_t flag) { return (statusRegister_ & flag); }
+void Cpu::clearFlag(uint8_t flag) { statusRegister_ &= ~flag; }
+void Cpu::setFlag(uint8_t flag) { statusRegister_ |= flag; }
 
 void Cpu::setFlag(uint8_t flag, bool condition) {
   if (condition)
@@ -188,18 +197,18 @@ void Cpu::setFlag(uint8_t flag, bool condition) {
     clearFlag(flag);
 }
 
-void Cpu::setPc(uint16_t pc) { prgrmCtr_ = pc; }
-void Cpu::setStkPtr(uint16_t stk) { stkPtr_ = stk; }
-void Cpu::setAcc(uint8_t acc) { acc_ = acc; }
-void Cpu::setX(uint8_t x) { indexregX_ = x; }
-void Cpu::setY(uint8_t y) { indexregY_ = y; }
-void Cpu::setStatus(uint8_t status) { statusReg_ = status; }
-uint16_t Cpu::getPc() { return prgrmCtr_; }
-uint16_t Cpu::getStkPtr() { return stkPtr_; }
-uint8_t Cpu::getAcc() { return acc_; }
-uint8_t Cpu::getX() { return indexregX_; }
-uint8_t Cpu::getY() { return indexregY_; }
-uint8_t Cpu::getStatus() { return statusReg_; }
+void Cpu::setProgramCounter(uint16_t pc) { programCounter_ = pc; }
+void Cpu::setStackPointer(uint16_t sp) { stackPointer_ = sp; }
+void Cpu::setAccumulator(uint8_t acc) { accumulator_ = acc; }
+void Cpu::setIndexRegisterX(uint8_t x) { indexRegisterX_ = x; }
+void Cpu::setIndexRegisterY(uint8_t y) { indexRegisterY_ = y; }
+void Cpu::setStatusRegister(uint8_t status) { statusRegister_ = status; }
+uint16_t Cpu::getProgramCounter() { return programCounter_; }
+uint16_t Cpu::getStackPointer() { return stackPointer_; }
+uint8_t Cpu::getAccumulator() { return accumulator_; }
+uint8_t Cpu::getIndexRegisterX() { return indexRegisterX_; }
+uint8_t Cpu::getIndexRegisterY() { return indexRegisterY_; }
+uint8_t Cpu::getStatusRegister() { return statusRegister_; }
 
 void Cpu::updateZNflag(uint8_t reg, uint8_t val) {
   if (reg == val)
@@ -217,31 +226,31 @@ uint16_t Cpu::getAddress(uint8_t mode, uint8_t offset) {
   uint8_t low{}, high{};
 
   if (mode == indirect) {
-    uint8_t baseAddr = cpuRead(prgrmCtr_++);
+    uint8_t baseAddr = cpuRead(programCounter_++);
 
     if (offset == X) {
-      low = cpuRead((baseAddr + indexregX_) % 256);
-      high = cpuRead((baseAddr + indexregX_ + 1) % 256);
+      low = cpuRead((baseAddr + indexRegisterX_) % 256);
+      high = cpuRead((baseAddr + indexRegisterX_ + 1) % 256);
       address = (high << 8) | low;
     } else {
       low = cpuRead(baseAddr);
       high = cpuRead((baseAddr + 1) % 256);
-      address = ((high << 8) | low) + indexregY_;
+      address = ((high << 8) | low) + indexRegisterY_;
     }
   }
 
   if (offset == X)
-    offset = indexregX_;
+    offset = indexRegisterX_;
   else if (offset == Y)
-    offset = indexregY_;
+    offset = indexRegisterY_;
 
   if (mode == immediate) {
-    address = prgrmCtr_++;
+    address = programCounter_++;
   } else if (mode == zeroPage) {
-    address = (cpuRead(prgrmCtr_++) + offset) % 256;
+    address = (cpuRead(programCounter_++) + offset) % 256;
   } else if (mode == absolute) {
-    low = cpuRead(prgrmCtr_++);
-    high = cpuRead(prgrmCtr_++);
+    low = cpuRead(programCounter_++);
+    high = cpuRead(programCounter_++);
     address = ((high << 8) | low) + offset;
   }
 
@@ -250,56 +259,56 @@ uint16_t Cpu::getAddress(uint8_t mode, uint8_t offset) {
 
 // Access instructions: LDA	STA	LDX	STX	LDY	STY
 void Cpu::LDA(uint8_t mode, uint8_t offset) {
-  acc_ = cpuRead(getAddress(mode, offset));
-  updateZNflag(acc_, 0);
+  accumulator_ = cpuRead(getAddress(mode, offset));
+  updateZNflag(accumulator_, 0);
 }
 
 void Cpu::STA(uint8_t mode, uint8_t offset) {
-  cpuWrite(getAddress(mode, offset), acc_);
+  cpuWrite(getAddress(mode, offset), accumulator_);
 }
 
 void Cpu::LDX(uint8_t mode, uint8_t offset) {
-  indexregX_ = cpuRead(getAddress(mode, offset));
-  updateZNflag(indexregX_, 0);
+  indexRegisterX_ = cpuRead(getAddress(mode, offset));
+  updateZNflag(indexRegisterX_, 0);
 }
 
 void Cpu::STX(uint8_t mode, uint8_t offset) {
-  cpuWrite(getAddress(mode, offset), indexregX_);
+  cpuWrite(getAddress(mode, offset), indexRegisterX_);
 }
 
 void Cpu::LDY(uint8_t mode, uint8_t offset) {
-  indexregY_ = cpuRead(getAddress(mode, offset));
-  updateZNflag(indexregY_, 0);
+  indexRegisterY_ = cpuRead(getAddress(mode, offset));
+  updateZNflag(indexRegisterY_, 0);
 }
 
 void Cpu::STY(uint8_t mode, uint8_t offset) {
-  cpuWrite(getAddress(mode, offset), indexregY_);
+  cpuWrite(getAddress(mode, offset), indexRegisterY_);
 }
 
 // Transfer instructions: TAX TXA TAY TYA
 void Cpu::TAX(uint8_t, uint8_t) {
-  indexregX_ = acc_;
-  updateZNflag(indexregX_, 0);
+  indexRegisterX_ = accumulator_;
+  updateZNflag(indexRegisterX_, 0);
 }
 void Cpu::TXA(uint8_t, uint8_t) {
-  acc_ = indexregX_;
-  updateZNflag(acc_, 0);
+  accumulator_ = indexRegisterX_;
+  updateZNflag(accumulator_, 0);
 }
 void Cpu::TAY(uint8_t, uint8_t) {
-  indexregY_ = acc_;
-  updateZNflag(indexregY_, 0);
+  indexRegisterY_ = accumulator_;
+  updateZNflag(indexRegisterY_, 0);
 }
 void Cpu::TYA(uint8_t, uint8_t) {
-  acc_ = indexregY_;
-  updateZNflag(acc_, 0);
+  accumulator_ = indexRegisterY_;
+  updateZNflag(accumulator_, 0);
 }
 
 // Arithmetic instructions: ADC SBC INC DEC INX DEX INY DEY
 void Cpu::ADC(uint8_t mode, uint8_t offset) {
   uint8_t memval = cpuRead(getAddress(mode, offset));
-  uint8_t accval = acc_;
-  uint16_t sum = acc_ + memval + getFlag(carry);
-  acc_ = sum;
+  uint8_t accval = accumulator_;
+  uint16_t sum = accumulator_ + memval + getFlag(carry);
+  accumulator_ = sum;
 
   if (sum > 0xFF)
     setFlag(carry);
@@ -309,15 +318,15 @@ void Cpu::ADC(uint8_t mode, uint8_t offset) {
     setFlag(overflow);
   else
     clearFlag(overflow);
-  updateZNflag(acc_, 0);
+  updateZNflag(accumulator_, 0);
 }
 
 void Cpu::SBC(uint8_t mode, uint8_t offset) {
   uint8_t memval = cpuRead(getAddress(mode, offset));
-  uint8_t accval = acc_;
-  uint16_t sum = acc_ - memval - !getFlag(carry);
+  uint8_t accval = accumulator_;
+  uint16_t sum = accumulator_ - memval - !getFlag(carry);
 
-  acc_ = sum;
+  accumulator_ = sum;
 
   if (sum > 0xFF)
     clearFlag(carry);
@@ -327,7 +336,7 @@ void Cpu::SBC(uint8_t mode, uint8_t offset) {
     setFlag(overflow);
   else
     clearFlag(overflow);
-  updateZNflag(acc_, 0);
+  updateZNflag(accumulator_, 0);
 }
 
 void Cpu::INC(uint8_t mode, uint8_t offset) {
@@ -345,31 +354,31 @@ void Cpu::DEC(uint8_t mode, uint8_t offset) {
 }
 
 void Cpu::INX(uint8_t, uint8_t) {
-  indexregX_++;
-  updateZNflag(indexregX_, 0);
+  indexRegisterX_++;
+  updateZNflag(indexRegisterX_, 0);
 }
 void Cpu::DEX(uint8_t, uint8_t) {
-  indexregX_--;
-  updateZNflag(indexregX_, 0);
+  indexRegisterX_--;
+  updateZNflag(indexRegisterX_, 0);
 }
 void Cpu::INY(uint8_t, uint8_t) {
-  indexregY_++;
-  updateZNflag(indexregY_, 0);
+  indexRegisterY_++;
+  updateZNflag(indexRegisterY_, 0);
 }
 void Cpu::DEY(uint8_t, uint8_t) {
-  indexregY_--;
-  updateZNflag(indexregY_, 0);
+  indexRegisterY_--;
+  updateZNflag(indexRegisterY_, 0);
 }
 
 // Shift instructions : ASL LSR ROL ROR
 void Cpu::ASL_acc(uint8_t, uint8_t) {
-  if (acc_ & negative)
+  if (accumulator_ & negative)
     setFlag(carry);
   else
     clearFlag(carry);
 
-  acc_ <<= 1;
-  updateZNflag(acc_, 0);
+  accumulator_ <<= 1;
+  updateZNflag(accumulator_, 0);
 }
 
 void Cpu::ASL(uint8_t mode, uint8_t offset) {
@@ -386,13 +395,13 @@ void Cpu::ASL(uint8_t mode, uint8_t offset) {
 }
 
 void Cpu::LSR_acc(uint8_t, uint8_t) {
-  if (acc_ & carry)
+  if (accumulator_ & carry)
     setFlag(carry);
   else
     clearFlag(carry);
 
-  acc_ >>= 1;
-  updateZNflag(acc_, 0);
+  accumulator_ >>= 1;
+  updateZNflag(accumulator_, 0);
   clearFlag(negative);
 }
 void Cpu::LSR(uint8_t mode, uint8_t offset) {
@@ -411,14 +420,14 @@ void Cpu::LSR(uint8_t mode, uint8_t offset) {
 
 void Cpu::ROL_acc(uint8_t, uint8_t) {
   bool prevCarry = getFlag(carry);
-  if (acc_ & negative)
+  if (accumulator_ & negative)
     setFlag(carry);
   else
     clearFlag(carry);
 
-  acc_ <<= 1;
-  acc_ |= prevCarry;
-  updateZNflag(acc_, 0);
+  accumulator_ <<= 1;
+  accumulator_ |= prevCarry;
+  updateZNflag(accumulator_, 0);
 }
 
 void Cpu::ROL(uint8_t mode, uint8_t offset) {
@@ -439,14 +448,14 @@ void Cpu::ROL(uint8_t mode, uint8_t offset) {
 
 void Cpu::ROR_acc(uint8_t, uint8_t) {
   bool prevCarry = getFlag(carry);
-  if (acc_ & carry)
+  if (accumulator_ & carry)
     setFlag(carry);
   else
     clearFlag(carry);
 
-  acc_ >>= 1;
-  acc_ |= (prevCarry << 7);
-  updateZNflag(acc_, 0);
+  accumulator_ >>= 1;
+  accumulator_ |= (prevCarry << 7);
+  updateZNflag(accumulator_, 0);
 }
 void Cpu::ROR(uint8_t mode, uint8_t offset) {
   uint16_t address = getAddress(mode, offset);
@@ -466,24 +475,24 @@ void Cpu::ROR(uint8_t mode, uint8_t offset) {
 
 // Bitwise instructions: AND ORA EOR BIT
 void Cpu::AND(uint8_t mode, uint8_t offset) {
-  acc_ &= cpuRead(getAddress(mode, offset));
-  updateZNflag(acc_, 0);
+  accumulator_ &= cpuRead(getAddress(mode, offset));
+  updateZNflag(accumulator_, 0);
 }
 
 void Cpu::ORA(uint8_t mode, uint8_t offset) {
-  acc_ |= cpuRead(getAddress(mode, offset));
-  updateZNflag(acc_, 0);
+  accumulator_ |= cpuRead(getAddress(mode, offset));
+  updateZNflag(accumulator_, 0);
 }
 
 void Cpu::EOR(uint8_t mode, uint8_t offset) {
-  acc_ ^= cpuRead(getAddress(mode, offset));
-  updateZNflag(acc_, 0);
+  accumulator_ ^= cpuRead(getAddress(mode, offset));
+  updateZNflag(accumulator_, 0);
 }
 
 void Cpu::BIT(uint8_t mode, uint8_t offset) {
   uint8_t value = cpuRead(getAddress(mode, offset));
 
-  setFlag(zero, (acc_ & value) == 0);
+  setFlag(zero, (accumulator_ & value) == 0);
   setFlag(overflow, value & overflow);
   setFlag(negative, value & negative);
 }
@@ -491,118 +500,118 @@ void Cpu::BIT(uint8_t mode, uint8_t offset) {
 // Comparison instructions: CMP CPX CPY
 void Cpu::CMP(uint8_t mode, uint8_t offset) {
   uint8_t value = cpuRead(getAddress(mode, offset));
-  uint8_t result = acc_ - value;
+  uint8_t result = accumulator_ - value;
 
-  setFlag(carry, acc_ >= value);
-  setFlag(zero, acc_ == value);
+  setFlag(carry, accumulator_ >= value);
+  setFlag(zero, accumulator_ == value);
   setFlag(negative, result & negative);
 }
 
 void Cpu::CPX(uint8_t mode, uint8_t offset) {
   uint8_t value = cpuRead(getAddress(mode, offset));
-  uint8_t result = indexregX_ - value;
+  uint8_t result = indexRegisterX_ - value;
 
-  setFlag(carry, indexregX_ >= value);
-  setFlag(zero, indexregX_ == value);
+  setFlag(carry, indexRegisterX_ >= value);
+  setFlag(zero, indexRegisterX_ == value);
   setFlag(negative, result & negative);
 }
 
 void Cpu::CPY(uint8_t mode, uint8_t offset) {
   uint8_t value = cpuRead(getAddress(mode, offset));
-  uint8_t result = indexregY_ - value;
+  uint8_t result = indexRegisterY_ - value;
 
-  setFlag(carry, indexregY_ >= value);
-  setFlag(zero, indexregY_ == value);
+  setFlag(carry, indexRegisterY_ >= value);
+  setFlag(zero, indexRegisterY_ == value);
   setFlag(negative, result & negative);
 }
 
 // Branch instructions
-#define BRANCH_IF(condition)             \
-  uint8_t offset = cpuRead(prgrmCtr_++); \
-  if (condition) prgrmCtr_ += static_cast<int8_t>(offset);
+#define BRANCH_IF(condition)                                    \
+  uint8_t offset = cpuRead(programCounter_++);                 \
+  if (condition) programCounter_ += static_cast<int8_t>(offset);
 
-void Cpu::BPL(uint8_t, uint8_t) { BRANCH_IF(!(statusReg_ & negative)); }
-void Cpu::BMI(uint8_t, uint8_t) { BRANCH_IF(statusReg_ & negative); }
-void Cpu::BVC(uint8_t, uint8_t) { BRANCH_IF(!(statusReg_ & overflow)); }
-void Cpu::BVS(uint8_t, uint8_t) { BRANCH_IF(statusReg_ & overflow); }
-void Cpu::BCC(uint8_t, uint8_t) { BRANCH_IF(!(statusReg_ & carry)); }
-void Cpu::BCS(uint8_t, uint8_t) { BRANCH_IF(statusReg_ & carry); }
-void Cpu::BNE(uint8_t, uint8_t) { BRANCH_IF(!(statusReg_ & zero)); }
-void Cpu::BEQ(uint8_t, uint8_t) { BRANCH_IF(statusReg_ & zero); }
+void Cpu::BPL(uint8_t, uint8_t) { BRANCH_IF(!(statusRegister_ & negative)); }
+void Cpu::BMI(uint8_t, uint8_t) { BRANCH_IF(statusRegister_ & negative); }
+void Cpu::BVC(uint8_t, uint8_t) { BRANCH_IF(!(statusRegister_ & overflow)); }
+void Cpu::BVS(uint8_t, uint8_t) { BRANCH_IF(statusRegister_ & overflow); }
+void Cpu::BCC(uint8_t, uint8_t) { BRANCH_IF(!(statusRegister_ & carry)); }
+void Cpu::BCS(uint8_t, uint8_t) { BRANCH_IF(statusRegister_ & carry); }
+void Cpu::BNE(uint8_t, uint8_t) { BRANCH_IF(!(statusRegister_ & zero)); }
+void Cpu::BEQ(uint8_t, uint8_t) { BRANCH_IF(statusRegister_ & zero); }
 
 // Jump instructions: JMP JSR RTS BRK RTI
-void Cpu::JMP_abs(uint8_t, uint8_t) { prgrmCtr_ = getAddress(absolute, 0); }
+void Cpu::JMP_abs(uint8_t, uint8_t) { programCounter_ = getAddress(absolute, 0); }
 
 void Cpu::JMP_indr(uint8_t, uint8_t) {
-  uint8_t low = cpuRead(prgrmCtr_++);
-  uint8_t high = cpuRead(prgrmCtr_++);
+  uint8_t low = cpuRead(programCounter_++);
+  uint8_t high = cpuRead(programCounter_++);
   uint16_t address = (high << 8) | low;
 
   low = cpuRead(address++);
   high = cpuRead(address);
-  prgrmCtr_ = (high << 8) | low;
+  programCounter_ = (high << 8) | low;
 }
 
 void Cpu::JSR(uint8_t, uint8_t) {
   uint16_t address = getAddress(absolute, 0);
-  uint16_t return_address = prgrmCtr_ - 1;
+  uint16_t return_address = programCounter_ - 1;
 
-  cpuWrite(STACK_PAGE_STARTING + stkPtr_--, (return_address >> 8) & 0xFF);
-  cpuWrite(STACK_PAGE_STARTING + stkPtr_--, return_address & 0xFF);
+  cpuWrite(STACK_PAGE_STARTING + stackPointer_--, (return_address >> 8) & 0xFF);
+  cpuWrite(STACK_PAGE_STARTING + stackPointer_--, return_address & 0xFF);
 
-  prgrmCtr_ = address;
+  programCounter_ = address;
 }
 
 void Cpu::RTS(uint8_t, uint8_t) {
-  uint8_t low = cpuRead(STACK_PAGE_STARTING + ++stkPtr_);
-  uint8_t high = cpuRead(STACK_PAGE_STARTING + ++stkPtr_);
-  prgrmCtr_ = ((high << 8) | low) + 1;
+  uint8_t low = cpuRead(STACK_PAGE_STARTING + ++stackPointer_);
+  uint8_t high = cpuRead(STACK_PAGE_STARTING + ++stackPointer_);
+  programCounter_ = ((high << 8) | low) + 1;
 }
 
 void Cpu::BRK(uint8_t, uint8_t) {
-  ++prgrmCtr_;
-  cpuWrite(STACK_PAGE_STARTING + stkPtr_--, (prgrmCtr_ >> 8) & 0xFF);
-  cpuWrite(STACK_PAGE_STARTING + stkPtr_--, prgrmCtr_ & 0xFF);
-  cpuWrite(STACK_PAGE_STARTING + stkPtr_--, statusReg_ | bFlag);
+  ++programCounter_;
+  cpuWrite(STACK_PAGE_STARTING + stackPointer_--, (programCounter_ >> 8) & 0xFF);
+  cpuWrite(STACK_PAGE_STARTING + stackPointer_--, programCounter_ & 0xFF);
+  cpuWrite(STACK_PAGE_STARTING + stackPointer_--, statusRegister_ | bFlag);
 
   setFlag(intrptDisable);
   uint8_t low = cpuRead(0xFFFE);
   uint8_t high = cpuRead(0xFFFF);
-  prgrmCtr_ = (high << 8) | low;
+  programCounter_ = (high << 8) | low;
 }
 
 void Cpu::RTI(uint8_t, uint8_t) {
-  statusReg_ = cpuRead(STACK_PAGE_STARTING + ++stkPtr_) | one;
+  statusRegister_ = cpuRead(STACK_PAGE_STARTING + ++stackPointer_) | unused;
   clearFlag(bFlag);
-  uint8_t low = cpuRead(STACK_PAGE_STARTING + ++stkPtr_);
-  uint8_t high = cpuRead(STACK_PAGE_STARTING + ++stkPtr_);
-  prgrmCtr_ = (high << 8) | low;
+  uint8_t low = cpuRead(STACK_PAGE_STARTING + ++stackPointer_);
+  uint8_t high = cpuRead(STACK_PAGE_STARTING + ++stackPointer_);
+  programCounter_ = (high << 8) | low;
 }
 
 // Stack instructions: PHA PLA PHP PLP TXS TSX
 void Cpu::PHA(uint8_t, uint8_t) {
-  cpuWrite(STACK_PAGE_STARTING + stkPtr_--, acc_);
+  cpuWrite(STACK_PAGE_STARTING + stackPointer_--, accumulator_);
 }
 
 void Cpu::PLA(uint8_t, uint8_t) {
-  acc_ = cpuRead(STACK_PAGE_STARTING + ++stkPtr_);
-  updateZNflag(acc_, 0);
+  accumulator_ = cpuRead(STACK_PAGE_STARTING + ++stackPointer_);
+  updateZNflag(accumulator_, 0);
 }
 
 void Cpu::PHP(uint8_t, uint8_t) {
-  cpuWrite(STACK_PAGE_STARTING + stkPtr_--, statusReg_ | 0b00110000);
+  cpuWrite(STACK_PAGE_STARTING + stackPointer_--, statusRegister_ | 0b00110000);
 }
 
 void Cpu::PLP(uint8_t, uint8_t) {
-  statusReg_ &= 0b00110000;
-  statusReg_ |= cpuRead(STACK_PAGE_STARTING + ++stkPtr_) & 0b11001111;
+  statusRegister_ &= 0b00110000;
+  statusRegister_ |= cpuRead(STACK_PAGE_STARTING + ++stackPointer_) & 0b11001111;
 }
 
-void Cpu::TXS(uint8_t, uint8_t) { stkPtr_ = indexregX_; }
+void Cpu::TXS(uint8_t, uint8_t) { stackPointer_ = indexRegisterX_; }
 
 void Cpu::TSX(uint8_t, uint8_t) {
-  indexregX_ = stkPtr_;
-  updateZNflag(indexregX_, 0);
+  indexRegisterX_ = stackPointer_;
+  updateZNflag(indexRegisterX_, 0);
 }
 
 // Flag instructions: CLC SEC CLI SEI CLD SED CLV

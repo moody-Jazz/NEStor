@@ -1,25 +1,23 @@
 #include "cpu.hpp"
 #include "raylib.h"
 
-int main(void)
-{
-    Cpu nescpu;
-    const int screenWidth = 800;
-    const int screenHeight = 450;
+int main(void) {
+  Cpu nescpu;
+  const int screenWidth = 800;
+  const int screenHeight = 450;
 
-    InitWindow(screenWidth, screenHeight, "NEStor");
+  InitWindow(screenWidth, screenHeight, "NEStor");
 
-    SetTargetFPS(60);               
+  SetTargetFPS(60);
 
-    while (!WindowShouldClose()) 
-    {
-        BeginDrawing();
-        ClearBackground(RAYWHITE);
-        nescpu.executeInstruction();
+  while (!WindowShouldClose()) {
+    BeginDrawing();
+    ClearBackground(RAYWHITE);
+    nescpu.executeInstruction();
 
-        EndDrawing();
-    }
+    EndDrawing();
+  }
 
-    CloseWindow();
-    return 0;
+  CloseWindow();
+  return 0;
 }

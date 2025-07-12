@@ -19,14 +19,14 @@ class Cpu {
   void printInfo();
 
   enum STATUS_FLAGS {
-    carry           = 0b00000001,
-    zero            = 0b00000010,
-    intrptDisable   = 0b00000100,
-    decimal         = 0b00001000,
-    bFlag           = 0b00010000,
-    one             = 0b00100000, 
-    overflow        = 0b01000000,
-    negative        = 0b10000000,
+    carry = 0b00000001,
+    zero = 0b00000010,
+    intrptDisable = 0b00000100,
+    decimal = 0b00001000,
+    bFlag = 0b00010000,
+    unused = 0b00100000,
+    overflow = 0b01000000,
+    negative = 0b10000000,
   };
 
   enum ADDRESSING_MODES {
@@ -46,18 +46,18 @@ class Cpu {
   void setFlag(uint8_t flag);
   void setFlag(uint8_t flag, bool condition);
   uint16_t getAddress(uint8_t mode, uint8_t offset);
-  void setPc(uint16_t pc);
-  void setStkPtr(uint16_t stk);
-  void setAcc(uint8_t acc);
-  void setX(uint8_t x);
-  void setY(uint8_t y);
-  void setStatus(uint8_t status);
-  uint16_t getPc();
-  uint16_t getStkPtr();
-  uint8_t getAcc();
-  uint8_t getX();
-  uint8_t getY();
-  uint8_t getStatus();
+  void setProgramCounter(uint16_t pc);
+  void setStackPointer(uint16_t sp);
+  void setAccumulator(uint8_t acc);
+  void setIndexRegisterX(uint8_t x);
+  void setIndexRegisterY(uint8_t y);
+  void setStatusRegister(uint8_t status);
+  uint16_t getProgramCounter();
+  uint16_t getStackPointer();
+  uint8_t getAccumulator();
+  uint8_t getIndexRegisterX();
+  uint8_t getIndexRegisterY();
+  uint8_t getStatusRegister();
   void updateZNflag(uint8_t reg, uint8_t val);
 
   uint8_t cpuRead(uint16_t addr);
@@ -155,13 +155,13 @@ class Cpu {
   };
 
  private:
-  uint8_t acc_;
-  uint8_t indexregX_, indexregY_;
+  uint8_t accumulator_;
+  uint8_t indexRegisterX_, indexRegisterY_;
 
-  uint16_t prgrmCtr_;
-  uint8_t stkPtr_;
+  uint16_t programCounter_;
+  uint8_t stackPointer_;
 
-  uint8_t statusReg_{};
+  uint8_t statusRegister_{};
 
   uint8_t opcode_;
 };
