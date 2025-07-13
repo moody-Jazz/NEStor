@@ -7,14 +7,23 @@ Cpu::Cpu() : opcodeArgList(256) {
   stackPointer_ = 0xFD;
   programCounter_ = 0x0;
   statusRegister_ |= unused;
+  pageCrossed_ = false;
 
   loadOpcodedata(opcodeArgList);
 }
 
 void Cpu::executeInstruction() {
+  pageCrossed_ = false;
   opcode_ = cpuRead(programCounter_++);
+  currCycleCount_ = opcodeCycles[opcode_];
+
   args = opcodeArgList[opcode_];
+
+  // the function call below has extra side effect of 
+  // incrementing currCycleCount_ if page is crossed
   (this->*opcodeMap[opcode_])(args.first, args.second);
+
+  totalCycleCount_ += currCycleCount_;
 }
 
 void Cpu::reset() {
@@ -61,6 +70,8 @@ uint8_t Cpu::getAccumulator() { return accumulator_; }
 uint8_t Cpu::getIndexRegisterX() { return indexRegisterX_; }
 uint8_t Cpu::getIndexRegisterY() { return indexRegisterY_; }
 uint8_t Cpu::getStatusRegister() { return statusRegister_; }
+uint32_t Cpu::getCurrCycleCount() { return currCycleCount_; }
+uint32_t Cpu::getTotalCycleCount() { return totalCycleCount_; }
 
 void Cpu::updateZNflag(uint8_t reg, uint8_t val) {
   if (reg == val)
@@ -73,6 +84,11 @@ void Cpu::updateZNflag(uint8_t reg, uint8_t val) {
     clearFlag(negative);
 }
 
+bool Cpu::isPageCrossed(uint16_t oldAddr, uint16_t newAddr){
+  return (oldAddr & 0xFF00) != (newAddr & 0xFF00);
+}
+
+// this function has side effect of incrementing the cyclecount if page is crossed
 uint16_t Cpu::getAddress(uint8_t mode, uint8_t offset) {
   uint16_t address{};
   uint8_t low{}, high{};
@@ -87,7 +103,9 @@ uint16_t Cpu::getAddress(uint8_t mode, uint8_t offset) {
     } else {
       low = cpuRead(baseAddr);
       high = cpuRead((baseAddr + 1) % 256);
-      address = ((high << 8) | low) + indexRegisterY_;
+      address = ((high << 8) | low);
+      pageCrossed_ = isPageCrossed(address, address + indexRegisterY_);
+      address += indexRegisterY_;
     }
   }
 
@@ -103,7 +121,9 @@ uint16_t Cpu::getAddress(uint8_t mode, uint8_t offset) {
   } else if (mode == absolute) {
     low = cpuRead(programCounter_++);
     high = cpuRead(programCounter_++);
-    address = ((high << 8) | low) + offset;
+    address = ((high << 8) | low);
+    pageCrossed_ = isPageCrossed(address, address + offset);
+    address += offset;
   }
 
   return address;
@@ -113,6 +133,7 @@ uint16_t Cpu::getAddress(uint8_t mode, uint8_t offset) {
 void Cpu::LDA(uint8_t mode, uint8_t offset) {
   accumulator_ = cpuRead(getAddress(mode, offset));
   updateZNflag(accumulator_, 0);
+  currCycleCount_ += pageCrossed_;
 }
 
 void Cpu::STA(uint8_t mode, uint8_t offset) {
@@ -122,6 +143,7 @@ void Cpu::STA(uint8_t mode, uint8_t offset) {
 void Cpu::LDX(uint8_t mode, uint8_t offset) {
   indexRegisterX_ = cpuRead(getAddress(mode, offset));
   updateZNflag(indexRegisterX_, 0);
+  currCycleCount_ += pageCrossed_;
 }
 
 void Cpu::STX(uint8_t mode, uint8_t offset) {
@@ -131,6 +153,7 @@ void Cpu::STX(uint8_t mode, uint8_t offset) {
 void Cpu::LDY(uint8_t mode, uint8_t offset) {
   indexRegisterY_ = cpuRead(getAddress(mode, offset));
   updateZNflag(indexRegisterY_, 0);
+  currCycleCount_ += pageCrossed_;
 }
 
 void Cpu::STY(uint8_t mode, uint8_t offset) {
@@ -171,6 +194,7 @@ void Cpu::ADC(uint8_t mode, uint8_t offset) {
   else
     clearFlag(overflow);
   updateZNflag(accumulator_, 0);
+  currCycleCount_ += pageCrossed_;
 }
 
 void Cpu::SBC(uint8_t mode, uint8_t offset) {
@@ -189,6 +213,7 @@ void Cpu::SBC(uint8_t mode, uint8_t offset) {
   else
     clearFlag(overflow);
   updateZNflag(accumulator_, 0);
+  currCycleCount_ += pageCrossed_;
 }
 
 void Cpu::INC(uint8_t mode, uint8_t offset) {
@@ -329,16 +354,19 @@ void Cpu::ROR(uint8_t mode, uint8_t offset) {
 void Cpu::AND(uint8_t mode, uint8_t offset) {
   accumulator_ &= cpuRead(getAddress(mode, offset));
   updateZNflag(accumulator_, 0);
+  currCycleCount_ += pageCrossed_;
 }
 
 void Cpu::ORA(uint8_t mode, uint8_t offset) {
   accumulator_ |= cpuRead(getAddress(mode, offset));
   updateZNflag(accumulator_, 0);
+  currCycleCount_ += pageCrossed_;
 }
 
 void Cpu::EOR(uint8_t mode, uint8_t offset) {
   accumulator_ ^= cpuRead(getAddress(mode, offset));
   updateZNflag(accumulator_, 0);
+  currCycleCount_ += pageCrossed_;
 }
 
 void Cpu::BIT(uint8_t mode, uint8_t offset) {
@@ -357,6 +385,7 @@ void Cpu::CMP(uint8_t mode, uint8_t offset) {
   setFlag(carry, accumulator_ >= value);
   setFlag(zero, accumulator_ == value);
   setFlag(negative, result & negative);
+  currCycleCount_ += pageCrossed_;
 }
 
 void Cpu::CPX(uint8_t mode, uint8_t offset) {
@@ -366,6 +395,7 @@ void Cpu::CPX(uint8_t mode, uint8_t offset) {
   setFlag(carry, indexRegisterX_ >= value);
   setFlag(zero, indexRegisterX_ == value);
   setFlag(negative, result & negative);
+  currCycleCount_ += pageCrossed_;
 }
 
 void Cpu::CPY(uint8_t mode, uint8_t offset) {
@@ -375,12 +405,18 @@ void Cpu::CPY(uint8_t mode, uint8_t offset) {
   setFlag(carry, indexRegisterY_ >= value);
   setFlag(zero, indexRegisterY_ == value);
   setFlag(negative, result & negative);
+  currCycleCount_ += pageCrossed_;
 }
 
 // Branch instructions
-#define BRANCH_IF(condition)                                    \
-  uint8_t offset = cpuRead(programCounter_++);                 \
-  if (condition) programCounter_ += static_cast<int8_t>(offset);
+#define BRANCH_IF(condition)                                  \
+  uint8_t offset = cpuRead(programCounter_++);                \
+  if (condition){                                             \
+    uint16_t oldPc = programCounter_;                         \
+    programCounter_ += static_cast<int8_t>(offset);           \
+    currCycleCount_ += isPageCrossed(oldPc, programCounter_); \
+    currCycleCount_++;                                        \
+  }                                                           \
 
 void Cpu::BPL(uint8_t, uint8_t) { BRANCH_IF(!(statusRegister_ & negative)); }
 void Cpu::BMI(uint8_t, uint8_t) { BRANCH_IF(statusRegister_ & negative); }

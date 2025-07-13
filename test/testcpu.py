@@ -11,7 +11,7 @@ def test(instruction, itr = 15):
 
     os.chdir("..")
     while itr:
-        outfile = open('testval.txt', 'w')
+        outfile = open('build_test/testval.txt', 'w')
         test_instance = testfile.readline()
         if test_instance.startswith('[') or test_instance.startswith(']'):
             continue
@@ -19,6 +19,7 @@ def test(instruction, itr = 15):
             break
         test_instance = test_instance.strip().rstrip(',')
         test_dic = json.loads(test_instance)
+        expected_cycle_count = len(test_dic['cycles'])
         
         # write all the register and memory values for test.cpp to read and set cpu values
         init_reg_values = [test_dic['initial'][key] for key in registers_keys]
@@ -28,26 +29,31 @@ def test(instruction, itr = 15):
         for val in init_reg_values:
             outfile.write(f'{val} ')
         outfile.write('\n')
+
         for val in test_dic['initial']['ram']:
             outfile.write(f'{val[0]} {val[1]}\n')
         outfile.write('\n')
+
         for val in test_dic['final']['ram']:
             expected_mem.append([val[0], val[1]])
             outfile.write(f'{val[0]} {val[1]}\n')
 
         outfile.close()
         try:
-            subprocess.run(['python', 'rpbild.py', 'test'])
-            subprocess.run(['main'], check=True) 
+            os.chdir('build_test')
+            subprocess.run('NEStor')
+            os.chdir("..")
 
         except subprocess.CalledProcessError as e:
             print('error running the test script')
             exit(1)
 
         # read the updated file to extract the final register and memory values
-        infile = open('testval.txt', 'r')
+        infile = open('build_test/testval.txt', 'r')
         final_reg = infile.readline().strip().rstrip('\n').split(' ')
+        actual_cycle_count = int(infile.readline().strip().rstrip('\n'))
         final_mem = []
+        
         while True:
             temp_string = infile.readline()
             temp_string = temp_string.strip().rstrip('\n')
@@ -60,7 +66,12 @@ def test(instruction, itr = 15):
         final_mem = [[int(a), int(b)] for a, b in final_mem]
         infile.close()
 
-        # compare the initial and final values to determine if Test was sucessful or not
+        # compare expected and actual values to determine if Test was sucessful or not
+        if actual_cycle_count != expected_cycle_count:
+            print(f"🔴 test case no {test_count} failed for instruction {instruction}")
+            print("🔴 cycle count doesn't match")
+            exit(1)
+
         for i in range(len(final_reg)):
             if final_reg[i] != expected_reg[i]:
                 print(f"🔴 test case no {test_count} failed for instruction {instruction}")
@@ -82,14 +93,32 @@ def test(instruction, itr = 15):
                 print('Expected:', expected_reg, '\nActual:', final_reg)
                 exit(1)
 
-        print('🟢  Test passed for test count', test_count)
+        # print('🟢  Test passed for test count', test_count)
         test_count += 1
         itr -= 1
-    os.chdir("Test/")
+    os.chdir("test/")
 
 def main():
     args = argv[1:]
-    
+
+    os.chdir("..")
+    print(os.getcwd())
+
+    print('cmake', '-G', '\"MinGW Makefiles\"', '-B', 'build_test', '-S',
+        '.', '-DBUILD_TESTS=ON', '-DTEST_FILE=test/testcpu.cpp')
+    subprocess.run([
+        'cmake',
+        '-G', 'MinGW Makefiles',
+        '-B', 'build_test',
+        '-S', '.',
+        '-DBUILD_TESTS=ON',
+        '-DTEST_FILE=test/testcpu.cpp'
+    ])
+    print('cmake', '--build', 'build_test')
+    subprocess.run(['cmake', '--build', 'build_test']) 
+
+    os.chdir("test/")
+
     itr = int(input('How many test cases you want to test against: '))
     
     if 'cpu_test_suit' in os.listdir(os.getcwd()):
@@ -99,11 +128,12 @@ def main():
         exit(1)
 
     # For testing against specific instruction
-    if len(args) > 0 and args[0] == 'test':
+    if len(args) > 0 and args[0] == 'single':
         file = input('Name of test file: ')
         print(f"🟢 starting testing for {file}")
         test(file, itr)
         print(f"🟢 All test passed for {file}")
+        exit(1)
         
 
     # For testing against all the instructions for which jsons are available

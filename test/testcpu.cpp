@@ -52,8 +52,8 @@ void runTest(Cpu& testcpu) {
   }
 
   testcpu.executeInstruction();
-
   std::ofstream ofile(filename);
+
   if (!ofile) {
     std::cerr << "Failed to open file for writing\n";
     return;
@@ -65,6 +65,7 @@ void runTest(Cpu& testcpu) {
         << +testcpu.getIndexRegisterX() << " " << +testcpu.getIndexRegisterY()
         << " " << +testcpu.getStatusRegister() << " \n";
 
+  ofile << testcpu.getCurrCycleCount() << "\n";
   // Write updated addresses
   for (uint16_t addr : address) ofile << addr << " " << +testcpu.cpuRead(addr) << "\n";
 
