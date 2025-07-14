@@ -2,7 +2,9 @@
 #include "raylib.h"
 
 int main(void) {
-  Cpu nescpu;
+  std::unique_ptr<NesMemory>mem = std::make_unique<NesMemory>();
+  Cpu nescpu(std::move(mem));
+  
   const int screenWidth = 800;
   const int screenHeight = 450;
 

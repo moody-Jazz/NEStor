@@ -11,7 +11,7 @@ def test(instruction, itr = 15):
 
     os.chdir("..")
     while itr:
-        outfile = open('build_test/testval.txt', 'w')
+        outfile = open(os.path.join('build_test', 'testval.txt'), 'w')
         test_instance = testfile.readline()
         if test_instance.startswith('[') or test_instance.startswith(']'):
             continue
@@ -41,7 +41,7 @@ def test(instruction, itr = 15):
         outfile.close()
         try:
             os.chdir('build_test')
-            subprocess.run('NEStor')
+            subprocess.run(['NEStor', 'testval.txt'])
             os.chdir("..")
 
         except subprocess.CalledProcessError as e:

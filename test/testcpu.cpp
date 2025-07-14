@@ -3,9 +3,7 @@
 #include <iostream>
 #include <string>
 #include "cpu.h"
-
-void runTest(Cpu& testcpu) {
-  std::string filename = "testval.txt";
+void runTest(Cpu& testcpu, std::string filename) {
 
   std::ifstream ifile(filename);
   std::vector<size_t> address;
@@ -23,7 +21,7 @@ void runTest(Cpu& testcpu) {
     // Read register values: pc stk acc x y status
     uint16_t pc, stk, acc, x, y, status;
     iss >> pc >> stk >> acc >> x >> y >> status;
-
+    
     testcpu.setProgramCounter(pc);
     testcpu.setStackPointer(stk);
     testcpu.setAccumulator(acc);
@@ -31,26 +29,25 @@ void runTest(Cpu& testcpu) {
     testcpu.setIndexRegisterY(y);
     testcpu.setStatusRegister(status);
   }
-
+  
   // Process rest of the lines
   while (std::getline(ifile, line)) {
     if (line.empty()) {
       readingFinalBlock = true;
       continue; 
     }
-
+    
     std::istringstream iss(line);
     int addr, val;
-
+    
     if (iss >> addr >> val) {
       if (readingFinalBlock)
         address.push_back(addr);  // final check memory address
-
-      else
+        
+      else      
         testcpu.cpuWrite(addr, val);  // initial memory load
     }
   }
-
   testcpu.executeInstruction();
   std::ofstream ofile(filename);
 
@@ -73,7 +70,8 @@ void runTest(Cpu& testcpu) {
   ofile.close();
 }
 
-int main() {
-  Cpu testcpu;
-  runTest(testcpu);
+int main(int argc, char* argv[]) {
+  std::unique_ptr<BaseMemory> memPtr = std::make_unique<BaseMemory>(64*KILO_BYTE);
+  Cpu testcpu(std::move(memPtr));
+  runTest(testcpu, argv[1]);
 }

@@ -1,8 +1,6 @@
 #include "global.h"
 #include <sstream>
 
-uint8_t memory[65535];
-
 void loadRom(const std::string filename) {
   std::ifstream file;
   file.open(filename, std::ios::binary);
@@ -23,7 +21,7 @@ void loadRom(const std::string filename) {
     return;
   }
 
-  for (int i{}; i < size; i++) memory[0x0 + i] = buffer[i];
+  // for (int i{}; i < size; i++) memory[0x0 + i] = buffer[i];
 
   file.close();
 }

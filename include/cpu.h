@@ -2,8 +2,11 @@
 
 #include <cstdint>
 #include <vector>
+#include <memory>
 #include "global.h"
+#include "nesmemory.h"
 
+class NesMemory;
 constexpr uint8_t ZERO_PAGE_STARTING = 0X00;
 constexpr uint8_t ZERO_PAGE_ENDING = 0XFF;
 constexpr uint16_t STACK_PAGE_STARTING = 0X0100;
@@ -11,7 +14,7 @@ constexpr uint16_t STACK_PAGE_ENDING = 0X01FF;
 
 class Cpu {
  public:
- Cpu();
+ Cpu(std::unique_ptr<BaseMemory> memPtr);
  
  std::pair<uint8_t, uint8_t> args;
  void executeInstruction();
@@ -156,6 +159,7 @@ class Cpu {
   };
 
 private:
+  std::unique_ptr<BaseMemory> memPtr_;
   uint8_t accumulator_;
   uint8_t indexRegisterX_, indexRegisterY_;
   uint16_t programCounter_;

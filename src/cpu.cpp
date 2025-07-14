@@ -3,7 +3,8 @@
 
 using namespace CpuTypes;
 
-Cpu::Cpu() : opcodeArgList(256) {
+Cpu::Cpu(std::unique_ptr<BaseMemory> memPtr)
+ : memPtr_(std::move(memPtr)), opcodeArgList(256) {
   stackPointer_ = 0xFD;
   programCounter_ = 0x0;
   statusRegister_ |= unused;
@@ -35,9 +36,9 @@ void Cpu::reset() {
   programCounter_ = 0;
 }
 
-uint8_t Cpu::cpuRead(uint16_t addr) { return memory[addr]; }
+uint8_t Cpu::cpuRead(uint16_t addr) { return memPtr_->read(addr); }
 
-void Cpu::cpuWrite(uint16_t addr, uint8_t value) { memory[addr] = value; }
+void Cpu::cpuWrite(uint16_t addr, uint8_t value) { memPtr_->write(addr, value); }
 
 void Cpu::printInfo() {
   std::cout << "prgrm counter: " << programCounter_ << "\n";
