@@ -3,8 +3,6 @@
 #include <cstdint>
 #include <vector>
 
-inline constexpr uint16_t KILO_BYTE = 1024;
-
 class BaseMemory{
 public:
   BaseMemory(uint32_t size);

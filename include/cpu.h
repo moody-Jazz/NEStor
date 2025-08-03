@@ -3,7 +3,6 @@
 #include <cstdint>
 #include <vector>
 #include <memory>
-#include "global.h"
 #include "nesmemory.h"
 
 class NesMemory;

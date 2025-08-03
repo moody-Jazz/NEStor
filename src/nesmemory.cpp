@@ -1,8 +1,9 @@
 #include "nesmemory.h"
 
-NesMemory::NesMemory() : BaseMemory(2 * KILO_BYTE){
-  prgRom_.resize(KILO_BYTE);
-  chrRom_.resize(KILO_BYTE);
+NesMemory::NesMemory(std::unique_ptr<Mapper> mapper) : 
+  BaseMemory(2 * KILO_BYTE),
+  mapper_(std::move(mapper))
+{
 }
 
 NesMemory::~NesMemory(){}
@@ -54,7 +55,7 @@ uint8_t NesMemory::read(uint16_t address){
   case SRAM:
     return sram_[address - 0x6000];
   case PRG_ROM:
-    return prgRom_[address - 0x8000];
+    return mapper_->readPRG(address);
   default:
     break;
   }
@@ -84,7 +85,7 @@ void NesMemory::write(uint16_t address, uint8_t value){
     sram_[address - 0x6000] = value;
     break;
   case PRG_ROM:
-    prgRom_[address - 0x8000] = value;
+    mapper_->writePRG(address, value);
     break;
   default:
     break;

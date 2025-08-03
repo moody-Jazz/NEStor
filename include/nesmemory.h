@@ -1,12 +1,16 @@
 #pragma once
 
 #include <array>
+#include <memory>
+
+#include "mapper.h"
 #include "basememory.h"
+#include "helper.h"
 
 class NesMemory : public BaseMemory{
 
 public:
-  NesMemory();
+  NesMemory(std::unique_ptr<Mapper> mapper);
   ~NesMemory();
 
   enum MEMORY_REGIONS{
@@ -27,16 +31,12 @@ public:
   void write(uint16_t addresss, uint8_t value) override;
 
 private:
+
+  std::unique_ptr<Mapper> mapper_;
   std::array<uint8_t, 8> ppuRegisters_;
   std::array<uint8_t, 256> oam_;
   std::array<uint8_t, 31> apuRegisters_;
   uint8_t controller_;
   std::array<uint8_t, 8 * KILO_BYTE> expansionRom_;
   std::array<uint8_t, 8 * KILO_BYTE> sram_;
-
-  uint8_t chrBanks_;
-  uint8_t prgBanks_;
-  std::vector<uint8_t> chrRom_;
-  std::vector<uint8_t> prgRom_;
-
 };
