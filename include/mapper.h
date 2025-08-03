@@ -13,4 +13,5 @@ public:
 
   virtual uint8_t readCHR(uint16_t addr) = 0;
   virtual void writeCHR(uint16_t addr, uint8_t value) = 0;
+  virtual uint16_t mirrorVRAM(uint16_t address) = 0;
 };

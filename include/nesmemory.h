@@ -29,6 +29,12 @@ public:
 
   uint8_t read(uint16_t address) override;
   void write(uint16_t addresss, uint8_t value) override;
+  uint8_t readPPUMemory(uint16_t address);
+  void writePPUMemory(uint16_t address, uint8_t value);
+  
+  // OAM (Object Attribute Memory) operations
+  uint8_t readOAM(uint8_t address) const;
+  void writeOAM(uint8_t address, uint8_t value);
 
 private:
 
@@ -39,4 +45,7 @@ private:
   uint8_t controller_;
   std::array<uint8_t, 8 * KILO_BYTE> expansionRom_;
   std::array<uint8_t, 8 * KILO_BYTE> sram_;
+
+  std::array<uint8_t, 2*KILO_BYTE> nametableVRAM_; // 2KB for nametables (0x2000–0x2FFF)
+  std::array<uint8_t, 32> paletteRAM_;
 };

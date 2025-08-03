@@ -1,8 +1,10 @@
 #include "mapper0.h"
 
-Mapper0::Mapper0(const std::vector<uint8_t> &prg, const std::vector<uint8_t> &chr)
+Mapper0::Mapper0(const std::vector<uint8_t> &prg, const std::vector<uint8_t> &chr,
+                 const Mirroring &mirroring)
   : prgROM_(prg), chrROM_(chr)
-  {}
+{
+}
 
 uint8_t Mapper0::readPRG(uint16_t addr){
   if (prgROM_.size() == 0x4000)    // 16KB
@@ -24,3 +26,6 @@ void Mapper0::writeCHR(uint16_t addr, uint8_t value){
     chrROM_[addr] = value; // if using CHR-RAM
 }
 
+uint16_t Mapper0::mirrorVRAM(uint16_t address) {
+  return 0;
+}
