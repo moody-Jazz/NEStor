@@ -3,9 +3,9 @@
 #include <cstdint>
 #include <vector>
 #include <memory>
-#include "nesmemory.h"
+#include "BaseMemory.h"
+#include "helper.h"
 
-class NesMemory;
 constexpr uint8_t ZERO_PAGE_STARTING = 0X00;
 constexpr uint8_t ZERO_PAGE_ENDING = 0XFF;
 constexpr uint16_t STACK_PAGE_STARTING = 0X0100;

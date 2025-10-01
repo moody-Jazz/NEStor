@@ -1,6 +1,5 @@
 #include <sstream>
 #include <fstream>
-
 #include "helper.h"
 
 void loadOpcodedata(
