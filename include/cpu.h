@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <vector>
 #include <memory>
-#include "BaseMemory.h"
+#include "basememory.h"
 #include "helper.h"
 
 constexpr uint8_t ZERO_PAGE_STARTING = 0X00;
