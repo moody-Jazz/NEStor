@@ -11,18 +11,6 @@ A JSON-based test suite is also included to verify correctness.
 - Abstract memory interface (`BaseMemory`)
 - JSON-based automated test suite
 
-## Project Structure
-```
-basememory.h          # Abstract memory interface
-cpu.h                 # CPU class
-cpu.cpp               # CPU implementation
-helper.h              # Supporting enums/macros
-opcodedata.txt        # Opcode addressing modes
-install_cputests.py   # Downloads JSON test cases
-testcpu.py            # Runs tests
-cpu_test_suit/        # Directory created for JSON test cases
-```
-
 ## Integration Steps
 
 ### 1. Add Files
