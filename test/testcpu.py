@@ -9,9 +9,8 @@ def test(instruction, itr = 15):
     registers_keys = ['pc', 's', 'a', 'x', 'y', 'p']
     test_count = 1
 
-    os.chdir("..")
     while itr:
-        outfile = open(os.path.join('build_test', 'testval.txt'), 'w')
+        outfile = open('testval.txt', 'w')
         test_instance = testfile.readline()
         if test_instance.startswith('[') or test_instance.startswith(']'):
             continue
@@ -40,16 +39,16 @@ def test(instruction, itr = 15):
 
         outfile.close()
         try:
-            os.chdir('build_test')
-            subprocess.run(['NEStor', 'testval.txt'])
             os.chdir("..")
+            subprocess.run(['MOS6502', os.path.join('test', 'testval.txt')])
 
         except subprocess.CalledProcessError as e:
             print('error running the test script')
             exit(1)
 
         # read the updated file to extract the final register and memory values
-        infile = open('build_test/testval.txt', 'r')
+        os.chdir("test/")
+        infile = open('testval.txt', 'r')
         final_reg = infile.readline().strip().rstrip('\n').split(' ')
         actual_cycle_count = int(infile.readline().strip().rstrip('\n'))
         final_mem = []
@@ -96,52 +95,56 @@ def test(instruction, itr = 15):
         # print('🟢  Test passed for test count', test_count)
         test_count += 1
         itr -= 1
-    os.chdir("test/")
 
 def main():
     args = argv[1:]
 
     os.chdir("..")
-    print(os.getcwd())
+    print("Working directory:", os.getcwd())
 
-    print('cmake', '-G', '\"MinGW Makefiles\"', '-B', 'build_test', '-S',
-        '.', '-DBUILD_TESTS=ON', '-DTEST_FILE=test/testcpu.cpp')
-    subprocess.run([
-        'cmake',
-        '-G', 'MinGW Makefiles',
-        '-B', 'build_test',
-        '-S', '.',
-        '-DBUILD_TESTS=ON',
-        '-DTEST_FILE=test/testcpu.cpp'
-    ])
-    print('cmake', '--build', 'build_test')
-    subprocess.run(['cmake', '--build', 'build_test']) 
+    print("Compiling using g++...")
+    compile_cmd = [
+        "g++",
+        "-std=c++17",
+        "-Iinclude",
+        "src/basememory.cpp",
+        "src/cpu.cpp",
+        "src/helper.cpp",
+        "test/testcpu.cpp",
+        "-o",
+        "MOS6502"
+    ]
+    print("Running:", ' '.join(compile_cmd))
+    result = subprocess.run(compile_cmd)
+
+    if result.returncode != 0:
+        print("Compilation failed.")
+        exit(1)
+    print("Compilation succeeded.")
 
     os.chdir("test/")
 
     itr = int(input('How many test cases you want to test against: '))
-    
+
     if 'cpu_test_suit' in os.listdir(os.getcwd()):
         json_file = os.listdir('cpu_test_suit')
     else:
-        print("Use the install_cputests script to install all the test first")
+        print("!! Use the install_cputests script to install all the tests first.")
         exit(1)
 
-    # For testing against specific instruction
+    # For testing a single instruction file
     if len(args) > 0 and args[0] == 'single':
         file = input('Name of test file: ')
-        print(f"🟢 starting testing for {file}")
+        print(f"🟢 Starting testing for {file}")
         test(file, itr)
-        print(f"🟢 All test passed for {file}")
-        exit(1)
-        
+        print(f"✅ All tests passed for {file}")
+        exit(0)
 
-    # For testing against all the instructions for which jsons are available
+    # For testing all JSON instruction files
     for file in json_file:
-        print(f"🟢 starting testing for {file}")
+        print(f"🟢 Starting testing for {file}")
         test(file, itr)
-        print(f"🟢 All test passed for {file}")
-
+        print(f"✅ All tests passed for {file}")
 
 if __name__ == '__main__':
     main()
